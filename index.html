@@ -225,9 +225,10 @@ tbody tr{cursor:pointer}
     <div class="homegrid">
       <section class="card" aria-labelledby="t-start">
         <h2 id="t-start">Lancer une séance</h2>
-        <div id="liveCard" class="card live" hidden></div>
+        <div id="liveCard" class="list" hidden></div>
         <div id="startBox" style="display:grid;gap:14px">
           <div class="field"><label for="hClasse">Classe</label><select id="hClasse"></select></div>
+          <p class="small muted" id="hDone"></p>
           <div class="row"><button class="big" id="hStart"><svg class="i"><use href="#i-play"/></svg>Lancer la séance</button></div>
         </div>
         <div id="needSetup" class="notice warn" hidden><svg class="i"><use href="#i-info"/></svg><span>Avant la première séance, le référent numérique doit ouvrir l'<b>Espace référent</b> pour créer son code et charger la liste des élèves.</span></div>
@@ -237,7 +238,7 @@ tbody tr{cursor:pointer}
         <ol class="steps">
           <li><span>Choisis la classe et lance la séance.</span></li>
           <li><span>Fais passer l'iPad : chaque élève touche son nom puis répond. Compte 2 minutes par élève.</span></li>
-          <li><span>Quand tout le monde est passé, maintiens le bouton <b>Adulte</b> appuyé, puis termine la séance.</span></li>
+          <li><span>Pour sortir, maintiens le bouton <b>Adulte</b> appuyé. La classe reste « en cours » sur l'accueil, même si un élève est absent : tu la reprends plus tard. Quand tout le monde est passé, termine la séance.</span></li>
           <li><span>Les réponses partent à l'abri. Tu ne peux pas les voir, et les élèves non plus.</span></li>
         </ol>
       </section>
@@ -249,7 +250,7 @@ tbody tr{cursor:pointer}
     <section class="card" style="max-width:620px;justify-self:center;width:100%">
       <h2 id="endTitle">Terminer la séance ?</h2>
       <p id="endText" class="muted"></p>
-      <div class="row"><button class="big" id="endYes">Oui, terminer la séance</button><button class="ghost" id="endNo">Non, continuer</button></div>
+      <div class="row"><button class="big" id="endYes">Oui, terminer la séance</button><button class="ghost" id="endNo">Non, la garder en cours</button></div>
     </section>
   </main>
 
@@ -394,7 +395,7 @@ const QDEF=["Avec qui aimes-tu travailler en classe ?","À qui demandes-tu de l'
 const NB=2;
 
 /* ---------- stockage local (tout reste sur cet iPad) ---------- */
-const K={ec:"sociogramme-eleves",live:"sociogramme-collecte",ar:"sociogramme-archives",code:"sociogramme-code",q:"sociogramme-questions"};
+const K={ec:"sociogramme-eleves",live:"sociogramme-collecte",lives:"sociogramme-seances",ar:"sociogramme-archives",code:"sociogramme-code",q:"sociogramme-questions"};
 const get=(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const put=(k,v,what)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ oups(what||"Enregistrement impossible.","L’iPad n’arrive pas à garder les données (navigation privée ou mémoire pleine). Préviens M. Ahkim avant de continuer."); return false; } };
 const del=k=>{ try{ localStorage.removeItem(k); }catch(e){} };
@@ -442,25 +443,33 @@ function show(v){ VIEWS.forEach(x=>$("#"+x).hidden=x!==v); $("#toRef").hidden=v!
 
 /* ============ ACCUEIL ============ */
 let ECOLE=get(K.ec,null);
-let LIVE=get(K.live,null); if(LIVE&&!LIVE.eleves) LIVE=null;
-if(LIVE&&!LIVE.done) LIVE.done=(LIVE.rows||[]).map(r=>Array.isArray(r)?r[0]:null).filter(Boolean);
+/* séances en cours : plusieurs classes peuvent être en cours en même temps */
+let LIVES=get(K.lives,null);
+if(!Array.isArray(LIVES)){ LIVES=[]; const old=get(K.live,null);
+  if(old&&old.eleves){ if(!old.done) old.done=(old.rows||[]).map(r=>Array.isArray(r)?r[0]:null).filter(Boolean); LIVES.push(old); }
+  if(put(K.lives,LIVES)) del(K.live); }
+let LIVE=null; // séance ouverte en ce moment sur l'écran élèves
+const saveLives=w=>put(K.lives,LIVES,w);
 const questions=()=>{ const q=get(K.q,null); return (q&&q.length?q:QDEF).filter(Boolean); };
 function renderHome(msg){
   const ready=!!(ECOLE&&ECOLE.classes&&get(K.code,null));
-  $("#needSetup").hidden=ready; $("#startBox").hidden=!ready||!!LIVE;
-  if(ready){ const cl=Object.keys(ECOLE.classes).sort((a,b)=>a.localeCompare(b,"fr",{numeric:true}));
+  $("#needSetup").hidden=ready; $("#startBox").hidden=!ready;
+  if(ready){ const faites=new Set(get(K.ar,[]).map(a=>a.classe));
+    const enCours=new Set(LIVES.map(x=>x.classe));
+    const cl=Object.keys(ECOLE.classes).filter(c=>!faites.has(c)&&!enCours.has(c)).sort((a,b)=>a.localeCompare(b,"fr",{numeric:true}));
     const prev=$("#hClasse").value;
-    $("#hClasse").innerHTML='<option value="">Choisis la classe…</option>'+cl.map(c=>`<option value="${esc(c)}">${esc(c)} · ${ECOLE.classes[c].length} élèves</option>`).join("");
-    if(prev) $("#hClasse").value=prev; }
+    $("#hClasse").innerHTML=(cl.length?'<option value="">Choisis la classe…</option>':'<option value="">Toutes les classes sont faites</option>')+cl.map(c=>`<option value="${esc(c)}">${esc(c)} · ${ECOLE.classes[c].length} élèves</option>`).join("");
+    if(prev&&cl.includes(prev)) $("#hClasse").value=prev;
+    $("#hDone").textContent=faites.size?`Déjà faites : ${[...faites].sort((a,b)=>a.localeCompare(b,"fr",{numeric:true})).join(", ")}. Elles n'apparaissent plus dans la liste.`:""; }
   $("#hStart").disabled=!$("#hClasse").value;
   const lc=$("#liveCard");
-  if(LIVE&&!LIVE.demo){ const n=LIVE.done.length, t=LIVE.eleves.length;
-    lc.hidden=false;
-    lc.innerHTML=`<div class="row" style="justify-content:space-between"><h3>Séance en cours · ${esc(LIVE.classe)}</h3><span class="pill p-live">${n} / ${t} élèves</span></div>
+  lc.hidden=!LIVES.length;
+  lc.innerHTML=LIVES.map(L=>{ const n=L.done.length, t=L.eleves.length;
+    return `<div class="card live"><div class="row" style="justify-content:space-between"><h3>${esc(L.classe)} · en cours</h3><span class="pill p-live">${n} / ${t} élèves</span></div>
       <div class="meter"><i style="width:${Math.round(n/t*100)}%"></i></div>
-      <div class="row"><button class="big" id="lResume"><svg class="i"><use href="#i-play"/></svg>Reprendre la séance</button><button class="ghost" id="lEnd">Terminer la séance</button></div>`;
-    $("#lResume").onclick=()=>openKiosk(); $("#lEnd").onclick=askEnd;
-  } else lc.hidden=true;
+      <div class="row"><button class="big" data-resume="${L.id}"><svg class="i"><use href="#i-play"/></svg>Reprendre</button><button class="ghost" data-end="${L.id}">Terminer la séance</button></div></div>`; }).join("");
+  lc.querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>{ LIVE=LIVES.find(x=>String(x.id)===b.dataset.resume); if(LIVE) openKiosk(); });
+  lc.querySelectorAll("[data-end]").forEach(b=>b.onclick=()=>{ LIVE=LIVES.find(x=>String(x.id)===b.dataset.end); if(LIVE) askEnd(); });
   const m=$("#homeMsg"); m.hidden=!msg; if(msg) m.querySelector("span").textContent=msg;
   show("vHome");
 }
@@ -469,7 +478,7 @@ $("#hStart").onclick=async()=>{
   const c=$("#hClasse").value; if(!c||!ECOLE) return;
   if(!(await pubKey())){ renderHome(); return; }
   LIVE={id:Date.now(),classe:c,eleves:ECOLE.classes[c].slice(),q:questions(),done:[],rows:[],debut:new Date().toLocaleDateString("fr-BE")};
-  if(put(K.live,LIVE)) openKiosk();
+  LIVES.push(LIVE); if(saveLives()) openKiosk(); else { LIVES.pop(); LIVE=null; }
 };
 const _hDemo=()=>{ LIVE_DEMO={demo:true,classe:"1X exemple",eleves:DEMO.eleves.slice(),q:QDEF.slice(),done:[],rows:[]}; openKiosk(true); };
 let LIVE_DEMO=null;
@@ -483,7 +492,7 @@ $("#endNo").onclick=()=>renderHome();
 $("#endYes").onclick=()=>{
   const ar=get(K.ar,[]); ar.unshift({id:LIVE.id,classe:LIVE.classe,date:new Date().toLocaleDateString("fr-BE"),q:LIVE.q,eleves:LIVE.eleves,rows:LIVE.rows});
   if(!put(K.ar,ar,"Séance non terminée.")) return;
-  del(K.live); const c=LIVE.classe, n=LIVE.done.length; LIVE=null;
+  const c=LIVE.classe, n=LIVE.done.length; LIVES=LIVES.filter(x=>x!==LIVE); saveLives(); LIVE=null;
   renderHome(`Séance ${c} terminée : ${n} réponse${n>1?"s":""} mise${n>1?"s":""} à l'abri. Seul le référent numérique peut les lire.`);
 };
 $("#toRef").onclick=()=>{ PRIV?openRef():openLock(); };
@@ -549,7 +558,7 @@ $("#kNext").onclick=async()=>{
     try{ L.rows.push(await seal({who:K_.who,picks:K_.picks})); }
     catch(e){ oups("Réponse non enregistrée.","Le chiffrement n'a pas fonctionné. Préviens M. Ahkim."); $("#kNext").disabled=false; return; }
     L.done.push(K_.who);
-    if(!put(K.live,L,"Réponse non enregistrée.")){ L.rows.pop(); L.done.pop(); $("#kNext").disabled=false; return; }
+    if(!saveLives("Réponse non enregistrée.")){ L.rows.pop(); L.done.pop(); $("#kNext").disabled=false; return; }
   } else L.done.push(K_.who);
   K_.step="merci"; kRender();
   setTimeout(()=>{ if(K_&&K_.step==="merci"&&!$("#vKiosk").hidden){ K_={who:null,step:-1}; kRender(); } },3500);
@@ -605,7 +614,7 @@ $("#lockDemo").onclick=()=>openResults(DEMO_DATA,true);
 $("#forgotBtn").onclick=()=>{ $("#forgotBox").hidden=!$("#forgotBox").hidden; };
 $("#forgotWipe").onclick=function(){
   if(!this.classList.contains("armed")){ this.classList.add("armed"); this.textContent="Confirmer : tout effacer"; return; }
-  [K.code,K.ar,K.live,"sociogramme-essais"].forEach(del); LIVE=null; PUB=null; PRIV=null; openLock();
+  [K.code,K.ar,K.live,K.lives,"sociogramme-essais"].forEach(del); LIVES=[]; LIVE=null; PUB=null; PRIV=null; openLock();
 };
 /* verrouillage automatique : quand l'iPad se met en veille ou après 10 minutes sans toucher */
 function lockNow(){ PRIV=null; if(!$("#vRef").hidden||(!$("#vRes").hidden&&!resDemo)) renderHome(); }
@@ -617,18 +626,19 @@ function openRef(){ if(!PRIV){ openLock(); return; } renderRef(); show("vRef"); 
 $("#refLock").onclick=()=>{ PRIV=null; renderHome("Espace référent verrouillé."); };
 function renderRef(){
   const ar=get(K.ar,[]); const items=[];
-  if(LIVE&&!LIVE.demo) items.push({live:true,classe:LIVE.classe,date:LIVE.debut,n:LIVE.done.length,t:LIVE.eleves.length});
+  LIVES.forEach(L=>items.push({live:true,id:L.id,classe:L.classe,date:L.debut,n:L.done.length,t:L.eleves.length}));
   ar.forEach((a,i)=>items.push({i,classe:a.classe,date:a.date,n:a.rows.length,t:a.eleves.length}));
   $("#collList").innerHTML=(items.length?items.map((x,j)=>`<div class="coll">${leaf(x.classe,j)}
       <div style="display:grid;gap:2px;min-width:0"><strong>${esc(x.classe)}</strong><span class="small muted">${x.live?"En cours depuis le ":"Terminée le "}${esc(x.date||"")} · ${x.n}/${x.t} élèves</span></div>
       <div class="acts"><span class="pill ${x.live?"p-live":"p-done"}">${x.live?"En cours":"Terminée"}</span>
-        <button class="ghost" data-open="${x.live?"live":x.i}" ${x.n?"":"disabled"}>Voir les résultats</button>
+        <button class="ghost" data-open="${x.live?"live:"+x.id:x.i}" ${x.n?"":"disabled"}>Voir les résultats</button>
         ${x.live?"":`<button class="danger" data-del="${x.i}">Supprimer</button>`}</div></div>`).join("")
     :`<div class="notice"><svg class="i"><use href="#i-info"/></svg><span>Aucune séance pour l'instant. Quand l'éducateur termine une séance, elle apparaît ici.</span></div>`)+
     `<div class="row"><button class="quiet" id="refDemo">Voir un exemple fictif</button></div>`;
   $("#refDemo").onclick=()=>openResults(DEMO_DATA,true);
   $("#collList").querySelectorAll("[data-open]").forEach(b=>b.onclick=async()=>{
-    const src=b.dataset.open==="live"?{classe:LIVE.classe,q:LIVE.q,eleves:LIVE.eleves,rows:LIVE.rows,live:true}:get(K.ar,[])[+b.dataset.open];
+    const o=b.dataset.open; const Lv=o.startsWith("live:")?LIVES.find(x=>"live:"+x.id===o):null;
+    const src=Lv?{classe:Lv.classe,q:Lv.q,eleves:Lv.eleves,rows:Lv.rows,live:true}:get(K.ar,[])[+o];
     b.disabled=true; b.textContent="Déchiffrement…";
     try{ const rows=[]; for(const s of src.rows) rows.push(await unseal(s,PRIV));
       openResults({classe:src.classe+(src.live?" (en cours)":""),date:src.date,q:src.q,eleves:src.eleves,rows},false);
@@ -857,7 +867,7 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
 
 /* ---------- garder les données : stockage persistant + sauvegarde dans un fichier ---------- */
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
-const BK_KEYS=[K.code,K.ar,K.live,K.q,K.ec];
+const BK_KEYS=[K.code,K.ar,K.lives,K.q,K.ec];
 $("#bkSave").onclick=()=>{
   const data={app:"sociogramme-la-vertu",v:1,date:new Date().toISOString()};
   BK_KEYS.forEach(k=>{ const v=get(k,null); if(v!==null) data[k]=v; });
@@ -873,7 +883,7 @@ $("#bkFile").addEventListener("change",e=>{
   const rd=new FileReader(); rd.onload=()=>{
     try{ const d=JSON.parse(rd.result); if(d.app!=="sociogramme-la-vertu") throw 0;
       BK_KEYS.forEach(k=>{ if(d[k]!==undefined) put(k,d[k]); });
-      ECOLE=get(K.ec,null); LIVE=get(K.live,null); PUB=null;
+      ECOLE=get(K.ec,null); LIVES=get(K.lives,[])||[]; LIVE=null; PUB=null;
       $("#bkMsg").textContent="Sauvegarde restaurée. Retape ton code si on te le demande."; renderRef();
     }catch(err){ $("#bkMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }
   }; rd.readAsText(f);
