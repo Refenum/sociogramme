@@ -1184,11 +1184,6 @@ async function buildPdf(){
     body:rows.map(x=>[x.name+(x.repondu?"":" (pas répondu)"),CAT[x.cat][0],String(x.recu),String(x.mut),`${x.isoQ} / ${x.qn} questions`,x.repondu?`${x.aucunQ} / ${x.qn}`:"-"].map(T)),
     columnStyles:{0:{fontStyle:"bold",cellWidth:42}},
     didParseCell:h=>{ if(h.section==="body"&&h.column.index===1){ const c=rows[h.row.index].cat; h.cell.styles.textColor=c==="iso"?PDFC.iso:c==="peu"?PDFC.peu:c==="star"?PDFC.plum:PDFC.green; h.cell.styles.fontStyle="bold"; } }});
-  /* ---- comment lire ---- */
-  H2(sec++,"Comment lire ce rapport");
-  P(`Chaque élève a répondu sur l'iPad à ${result.qLabels.length} questions en choisissant 0, 1 ou 2 camarades : ${result.qLabels.join(" / ")}`,9,PDFC.muted);
-  P("Un sociogramme est une photo à un moment donné. Il ne dit pas pourquoi un élève est peu choisi : croise toujours ces résultats avec ce que l'équipe observe en classe et à la récréation avant de tirer des conclusions.",9,PDFC.muted);
-  P("Ce document contient des informations sensibles sur des mineurs : ne le partage qu'avec les personnes qui accompagnent la classe (titulaire, éducateur, direction, centre PMS) et ne le montre jamais aux élèves.",9,PDFC.iso,"bold");
   /* ---- pied de page ---- */
   const n=doc.getNumberOfPages(), gen=new Date().toLocaleDateString("fr-BE");
   for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8); color(PDFC.muted);
