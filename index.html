@@ -161,6 +161,13 @@ label{font-weight:700;font-size:14px}
 .b-ok{background:var(--ok-soft);color:var(--ok)} .b-star{background:var(--star-soft);color:var(--star)}
 .b-nr{background:var(--blue-soft);color:var(--blue)}
 .list .badge{white-space:normal}
+.yrtabs{display:flex;flex-wrap:wrap;gap:8px}
+.yrtabs button{min-height:40px;padding:6px 16px}
+.yrtabs button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--on-accent)}
+.todo-grp{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:8px}
+.todo-grp.late{color:var(--iso)}
+.crit .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.crit .acts button{min-height:36px;padding:4px 12px;font-size:14px}
 .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .stat{border-radius:14px;padding:12px 14px;display:grid;gap:2px}
 .stat strong{font-family:var(--f-display);font-size:30px;font-variant-numeric:tabular-nums;line-height:1}
@@ -344,6 +351,8 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
       <button class="ghost" id="refLock"><svg class="i"><use href="#i-lock"/></svg>Verrouiller</button>
     </div>
     <div id="bkWarn" class="notice warn" hidden><svg class="i"><use href="#i-info"/></svg><div style="display:grid;gap:8px"><span id="bkWarnTxt"></span><div><button class="ghost" id="bkWarnBtn">Sauvegarder maintenant</button></div></div></div>
+    <section class="card" id="todoCard" aria-labelledby="t-todo" hidden></section>
+    <section class="card" id="yearCard" aria-labelledby="t-year" hidden></section>
     <div class="refgrid">
       <section class="card" aria-labelledby="t-coll">
         <h2 id="t-coll">Séances</h2>
@@ -819,7 +828,7 @@ function renderRef(){
   $("#collList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
     if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Confirmer"; return; }
     const a=get(K.ar,[]); a.splice(+b.dataset.del,1); put(K.ar,a); renderRef(); });
-  showEcole(); renderQEdit(); renderDemo();
+  showEcole(); renderQEdit(); renderDemo(); renderDash();
   const last=get(K.bk,0), jours=last?Math.floor((Date.now()-last)/86400000):null;
   const modif=get("sociogramme-modif",0);
   const besoin=(ar.length||LIVES.length||modif)&&(!last||(jours>=7&&modif>last));
@@ -1003,6 +1012,7 @@ const DEMO_SUIVI=[
   {id:"d1",k:norm("Sofia A."),t:"action",date:"2026-10-02T10:00:00",resp:"Centre PMS",texte:"Entretien individuel avec Sofia"},
   {id:"d2",k:norm("Sofia A."),t:"note",date:"2026-09-28T12:00:00",auteur:"Éducateur",texte:"Seule à la récréation trois jours de suite."},
   {id:"d3",k:norm("Hamza B."),t:"note",date:"2026-10-13T09:00:00",auteur:"Titulaire",texte:"Placé à côté de Mehdi en classe, ça se passe bien."}];
+const dans=j=>{ const d=new Date(Date.now()+j*86400000); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
 const dfmt=iso=>{ try{ return new Date(iso).toLocaleDateString("fr-BE"); }catch(e){ return ""; } };
 async function loadSuivi(d,demo){
   SUIVI=[]; if(demo){ SUIVI=DEMO_SUIVI.map(x=>({...x})); return; }
@@ -1034,18 +1044,21 @@ function suiviHTML(k){
   return `<div class="suivi"><h3>Suivi</h3>
     ${S.items.length?`<div class="list">${S.items.map(e=>e.t==="note"
       ?`<div class="ev"><span class="small muted">Note · ${dfmt(e.date)}${e.auteur?" · "+esc(e.auteur):""}</span><div>${esc(e.texte)}</div></div>`
-      :`<label class="ev act${e.fait?" done":""}"><input type="checkbox" data-done="${esc(e.id)}" ${e.fait?"checked disabled":""}><span><b>${esc(e.texte)}</b><br><span class="small muted">Action${e.resp?" · "+esc(e.resp):""} · ${dfmt(e.date)}${e.fait?" · faite le "+dfmt(e.faitLe):" · à faire"}</span></span></label>`).join("")}</div>`
+      :`<label class="ev act${e.fait?" done":""}"><input type="checkbox" data-done="${esc(e.id)}" ${e.fait?"checked disabled":""}><span><b>${esc(e.texte)}</b><br><span class="small muted">Action${e.resp?" · "+esc(e.resp):""} · ${dfmt(e.date)}${e.fait?" · faite le "+dfmt(e.faitLe):e.pour?" · à faire pour le "+dfmt(e.pour):" · à faire"}</span></span></label>`).join("")}</div>`
       :`<p class="small muted">Aucune note pour l'instant.</p>`}
     <div class="sform"><div class="row"><select id="sType" style="width:auto"><option value="note">Note</option><option value="action">Action à faire</option></select>
-      <input type="text" id="sQui" placeholder="Auteur ou responsable (ex. : PMS)" value="${esc(qui)}" style="flex:1 1 180px;width:auto"></div>
+      <input type="text" id="sQui" placeholder="Auteur ou responsable (ex. : PMS)" value="${esc(qui)}" style="flex:1 1 180px;width:auto">
+      <label class="small" id="sPourBox" hidden style="display:flex;align-items:center;gap:6px">Pour le <input type="date" id="sPour" value="${dans(7)}" style="width:auto"></label></div>
       <textarea id="sTxt" placeholder="Ex. : entretien fait, observé seul à la récré, parents contactés…"></textarea>
       <div><button class="ghost" id="sAdd">Ajouter au suivi</button></div></div></div>`;
 }
 function bindSuivi(k){
   const b=$("#sAdd"); if(!b) return;
-  b.onclick=()=>{ const t=$("#sType").value, txt=$("#sTxt").value.trim(), qui=$("#sQui").value.trim(); if(!txt){ $("#sTxt").focus(); return; }
+  const tg=()=>{ $("#sPourBox").hidden=$("#sType").value!=="action"; }; $("#sType").onchange=tg; tg();
+  b.onclick=()=>{ const t=$("#sType").value, txt=$("#sTxt").value.trim(), qui=$("#sQui").value.trim(), pour=$("#sPour").value; if(!txt){ $("#sTxt").focus(); return; }
     try{ localStorage.setItem("sociogramme-auteur",qui); }catch(e){}
-    addSuivi(t==="note"?{k,t,auteur:qui,texte:txt}:{k,t,resp:qui,texte:txt}); };
+    const nom=(result&&result.names.get(k))||"";
+    addSuivi(t==="note"?{k,nom,t,auteur:qui,texte:txt}:{k,nom,t,resp:qui,texte:txt,pour}); };
   document.querySelectorAll("#fiche [data-done]").forEach(c=>c.onchange=()=>{ if(c.checked) addSuivi({k,t:"fait",ref:c.dataset.done}); });
 }
 function buildResult(d){
@@ -1445,6 +1458,166 @@ new MutationObserver(render).observe(document.documentElement,{attributes:true,a
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 const BK_KEYS=[K.code,K.codes,K.ar,K.lives,K.q,K.qopen,K.educ,K.suivi,K.ec];
 /* partage un fichier : feuille de partage de l'iPad (OneDrive, Fichiers, Mail…), sinon téléchargement */
+
+/* ============ TABLEAU DE BORD : « À faire » + vue par année ============ */
+let DASH=null, DASH_SIG="", DASH_RUN=0, YEAR=null, YPDF=null;
+const anneeOf=c=>{ const m=/^(\d)/.exec(c||""); return m?m[1]:"autres"; };
+const anneeNom=n=>n==="autres"?"Autres classes":n==="1"?"1re":n+"e";
+const nomDe=(base,k,ev)=>{ if(ev&&ev.nom) return ev.nom; const l=(ECOLE&&ECOLE.classes&&ECOLE.classes[base])||[]; return l.find(n=>norm(n)===k)||k; };
+function sOf(list,k){
+  const ev=(list||[]).filter(e=>e.k===k), faits=new Set(ev.filter(e=>e.t==="fait").map(e=>e.ref));
+  const items=ev.filter(e=>e.t!=="fait"), last=ev.reduce((m,e)=>e.date>m?e.date:m,"");
+  return {n:items.length,notes:items.filter(e=>e.t==="note").length,ouvertes:items.filter(e=>e.t==="action"&&!faits.has(e.id)),jours:last?Math.floor((Date.now()-new Date(last))/86400000):null};
+}
+function sPill(list,k){ const S=sOf(list,k);
+  if(!S.n) return `<span class="spill sp-none">Pas encore de suivi</span>`;
+  if(S.ouvertes.length&&S.jours>=14) return `<span class="spill sp-old">Rien de nouveau depuis ${S.jours} jours · ${S.ouvertes.length} action${S.ouvertes.length>1?"s":""} à faire</span>`;
+  return `<span class="spill sp-ok">${S.notes} note${S.notes>1?"s":""} · ${S.ouvertes.length} action${S.ouvertes.length>1?"s":""} à faire</span>`; }
+async function loadDash(){
+  const ar=get(K.ar,[])||[], sv=get(K.suivi,{})||{};
+  const sig=[ar.length,ar.map(a=>a.id).join(","),get("sociogramme-modif",0),LIVES.map(l=>l.classe).join(","),Object.keys((ECOLE&&ECOLE.classes)||{}).length].join("|");
+  if(DASH&&DASH_SIG===sig) return DASH;
+  const suivi={}; for(const base in sv){ suivi[base]=[]; for(const x of sv[base]){ try{ suivi[base].push(await unseal(x,PRIV)); }catch(e){} } }
+  const parCl={}; ar.forEach((a,i)=>{ (parCl[a.classe]=parCl[a.classe]||[]).push(i); });
+  const noms=new Set([...Object.keys((ECOLE&&ECOLE.classes)||{}),...Object.keys(parCl),...LIVES.map(l=>l.classe)]);
+  const classes={};
+  for(const c of noms){
+    const idx=(parCl[c]||[]).sort((x,y)=>(ar[y].id||0)-(ar[x].id||0)), L=LIVES.find(l=>l.classe===c);
+    const o={classe:c,annee:anneeOf(c),live:L?{n:L.done.length,t:L.eleves.length,debut:L.debut}:null,idx:idx.length?idx[0]:null,date:null,n:0,
+      t:((ECOLE&&ECOLE.classes&&ECOLE.classes[c])||[]).length,A:[],iso:0};
+    if(idx.length){ try{
+      const d=await loadSession(String(idx[0])), res=buildResult(d);
+      o.date=d.date; o.n=d.rows.length; o.t=d.eleves.length; o.A=analyseEleves(res);
+      o.iso=[...compute("all",res).st.values()].filter(x=>x.cat==="iso").length;
+      if(idx.length>1){ const pd=await loadSession(String(idx[1])), prev=new Map(analyseEleves(buildResult(pd)).map(x=>[x.k,x]));
+        o.A.forEach(a=>{ const b=prev.get(a.k); if(!b||!b.repondu||!a.repondu) return;
+          if(((b.cat==="ok"||b.cat==="star")&&(a.cat==="iso"||a.cat==="peu"))||a.recu-b.recu<=-2){ a.sig.push(`Moins choisi qu'à la séance du ${pd.date} (${b.recu} → ${a.recu} choix)`); a.lvl=Math.min(a.lvl,a.cat==="iso"?1:2); } }); }
+    }catch(e){} }
+    classes[c]=o; }
+  /* actions à faire (toutes classes) + élèves prioritaires sans aucun suivi */
+  const todo=[];
+  for(const base in suivi){ const L=suivi[base], faits=new Set(L.filter(e=>e.t==="fait").map(e=>e.ref));
+    L.filter(e=>e.t==="action"&&!faits.has(e.id)).forEach(e=>todo.push({type:"action",base,k:e.k,nom:nomDe(base,e.k,e),texte:e.texte,resp:e.resp||"",pour:e.pour||"",id:e.id,date:e.date})); }
+  const oublies=[];
+  Object.values(classes).forEach(o=>o.A.filter(a=>a.lvl===1&&!sOf(suivi[o.classe],a.k).n).forEach(a=>oublies.push({base:o.classe,k:a.k,nom:a.name,sig:a.sig})));
+  DASH={classes,suivi,todo,oublies}; DASH_SIG=sig; return DASH;
+}
+async function renderDash(){
+  if(!PRIV) return; const run=++DASH_RUN;
+  if(!DASH){ $("#yearCard").hidden=false; $("#yearCard").innerHTML=`<h2 id="t-year">Vue par année</h2><p class="small muted">Chargement des résultats…</p>`; }
+  let D; try{ D=await loadDash(); }catch(e){ return; }
+  if(run!==DASH_RUN) return;
+  renderTodo(D); renderYear(D);
+}
+async function ouvrirEleve(base,k){
+  const o=DASH&&DASH.classes[base]; if(!o||o.idx===null){ oups("Pas encore de résultats.","Cette classe n'a pas encore de séance terminée."); return; }
+  try{ const d=await loadSession(String(o.idx)); openResults(d,false); if(k){ selected=k; render(); setTimeout(()=>{ const f=$("#fiche"); if(f) f.scrollIntoView({block:"center"}); },300); } }
+  catch(e){ oups("Lecture impossible.","Ces réponses n'ont pas pu être déchiffrées avec ce code."); }
+}
+async function marquerFait(base,k,ref){
+  try{ const all=get(K.suivi,{})||{}; (all[base]=all[base]||[]).push(await seal({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:new Date().toISOString(),k,t:"fait",ref}));
+    if(!put(K.suivi,all,"Suivi non enregistré.")) return; put("sociogramme-modif",Date.now()); renderDash(); }
+  catch(e){ oups("Suivi non enregistré.","Le chiffrement n'a pas fonctionné."); }
+}
+const plus=(l,n,f,lbl)=>l.slice(0,n).map(f).join("")+(l.length>n?`<details style="margin-top:6px"><summary class="small">${lbl} (${l.length-n})</summary>${l.slice(n).map(f).join("")}</details>`:"");
+function renderTodo(D){
+  const card=$("#todoCard"), today=dans(0), sem=dans(7);
+  const T0=D.todo.slice().sort((a,b)=>(a.pour||"9999").localeCompare(b.pour||"9999")||String(a.date).localeCompare(String(b.date)));
+  const late=T0.filter(x=>x.pour&&x.pour<today), week=T0.filter(x=>x.pour&&x.pour>=today&&x.pour<=sem),
+        later=T0.filter(x=>x.pour&&x.pour>sem), nodate=T0.filter(x=>!x.pour);
+  if(!T0.length&&!D.oublies.length){ card.hidden=false; card.innerHTML=`<h2 id="t-todo">À faire cette semaine</h2><p class="small muted">Rien à faire pour l'instant. Quand tu ajoutes une « Action à faire » dans la fiche d'un élève, elle apparaît ici à sa date.</p>`; return; }
+  const item=x=>`<div class="crit"><span class="sev ${x.pour&&x.pour<today?"sev-1":x.pour&&x.pour<=sem?"sev-2":"sev-3"}">${x.pour?(x.pour<today?"En retard · ":"")+dfmt(x.pour):"Sans date"}</span>
+    <div style="display:grid;gap:2px;min-width:0"><strong>${esc(x.texte)}</strong><span class="small muted">${esc(x.nom)} · ${esc(x.base)}${x.resp?" · "+esc(x.resp):""}</span>
+    <div class="acts"><button class="ghost" data-fait="${esc(x.base)}|${esc(x.k)}|${esc(x.id)}">C'est fait</button><button class="quiet" data-eleve="${esc(x.base)}|${esc(x.k)}">Voir la fiche</button></div></div></div>`;
+  const grp=(t,l,cls)=>l.length?`<div class="todo-grp ${cls||""}">${t} (${l.length})</div>${l.map(item).join("")}`:"";
+  card.hidden=false;
+  card.innerHTML=`<div class="row" style="justify-content:space-between"><h2 id="t-todo">À faire cette semaine</h2><span class="small muted">${late.length+week.length} action${late.length+week.length>1?"s":""} pour cette semaine</span></div>`+
+    grp("En retard",late,"late")+grp("Cette semaine",week)+grp("Sans date",nodate)+
+    (D.oublies.length?`<div class="todo-grp late">Élèves en priorité sans aucun suivi (${D.oublies.length})</div>`+plus(D.oublies,3,x=>`<div class="crit"><span class="sev sev-1">Priorité</span><div style="display:grid;gap:2px;min-width:0"><strong>${esc(x.nom)} · ${esc(x.base)}</strong><span class="small">${x.sig.map(esc).join(" · ")}</span><div class="acts"><button class="ghost" data-eleve="${esc(x.base)}|${esc(x.k)}">Ouvrir sa fiche et ajouter un suivi</button></div></div></div>`,"Voir les autres"):"")+
+    (later.length?`<details style="margin-top:8px"><summary class="small">Plus tard (${later.length})</summary>${later.map(item).join("")}</details>`:"");
+  card.querySelectorAll("[data-fait]").forEach(b=>b.onclick=()=>{ if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Confirmer : c'est fait"; return; }
+    const [base,k,id]=b.dataset.fait.split("|"); b.disabled=true; marquerFait(base,k,id); });
+  card.querySelectorAll("[data-eleve]").forEach(b=>b.onclick=()=>{ const [base,k]=b.dataset.eleve.split("|"); ouvrirEleve(base,k); });
+}
+function yearData(D,y){
+  const cls=Object.values(D.classes).filter(o=>o.annee===y).sort((a,b)=>a.classe.localeCompare(b.classe,"fr"));
+  const prio=[]; cls.forEach(o=>o.A.filter(a=>a.lvl<=2).forEach(a=>prio.push({...a,base:o.classe})));
+  prio.sort((a,b)=>a.lvl-b.lvl||a.recu-b.recu||a.base.localeCompare(b.base,"fr")||a.name.localeCompare(b.name,"fr"));
+  const ouvertes=D.todo.filter(t=>anneeOf(t.base)===y).length;
+  return {cls,prio,ouvertes,faites:cls.filter(o=>o.idx!==null).length,iso:cls.reduce((t,o)=>t+o.iso,0),eleves:cls.reduce((t,o)=>t+o.t,0)};
+}
+function renderYear(D){
+  const card=$("#yearCard"); const ys=[...new Set(Object.values(D.classes).map(o=>o.annee))].sort((a,b)=>a==="autres"?1:b==="autres"?-1:a.localeCompare(b));
+  if(!ys.length){ card.hidden=true; return; }
+  if(!YEAR||!ys.includes(YEAR)){ const ar=get(K.ar,[])||[]; const r=ar.slice().sort((a,b)=>(b.id||0)-(a.id||0))[0]; YEAR=r?anneeOf(r.classe):ys[0]; if(!ys.includes(YEAR)) YEAR=ys[0]; }
+  const Y=yearData(D,YEAR);
+  card.hidden=false;
+  card.innerHTML=`<div class="row" style="justify-content:space-between"><h2 id="t-year">Vue par année</h2>
+      <div class="yrtabs" role="group" aria-label="Année">${ys.map(y=>`<button class="ghost" data-y="${y}" aria-pressed="${y===YEAR}">${anneeNom(y)}</button>`).join("")}</div></div>
+    <div class="summary">${[["Classes faites",Y.faites+" / "+Y.cls.length,"var(--blue-soft)","var(--blue)"],["Élèves en priorité",Y.prio.filter(x=>x.lvl===1).length,"var(--iso-soft)","var(--iso)"],["À suivre",Y.prio.filter(x=>x.lvl===2).length,"var(--peu-soft)","var(--peu)"],["Isolés",Y.iso,"var(--iso-soft)","var(--iso)"],["Actions à faire",Y.ouvertes,"var(--ok-soft)","var(--ok)"]]
+      .map(([l,n,bg,fg])=>`<div class="stat" style="background:${bg}"><strong style="color:${fg}">${n}</strong><span>${l}</span></div>`).join("")}</div>
+    <div class="tablewrap"><table><thead><tr><th>Classe</th><th>Séance</th><th>Réponses</th><th>Isolés</th><th>Priorités</th><th></th></tr></thead><tbody>
+      ${Y.cls.map(o=>{ const pr=o.A.filter(a=>a.lvl===1).length;
+        const st=o.live?`<span class="pill p-live">En cours</span>`:o.idx!==null?`Terminée le ${esc(o.date||"")}`:`<span class="muted">Pas encore faite</span>`;
+        return `<tr><td><strong>${esc(o.classe)}</strong></td><td>${st}</td><td>${o.idx!==null?o.n+" / "+o.t:"–"}</td><td>${o.idx!==null?o.iso:"–"}</td><td>${o.idx!==null?(pr?`<span class="sev sev-1">${pr}</span>`:"0"):"–"}</td>
+          <td>${o.idx!==null?`<button class="quiet" data-cl="${esc(o.classe)}" style="min-height:34px;padding:2px 10px">Voir</button>`:""}</td></tr>`; }).join("")}
+    </tbody></table></div>
+    <h3>Élèves à suivre en ${esc(anneeNom(YEAR))}</h3>
+    ${Y.prio.length?plus(Y.prio,5,x=>`<div class="crit"><span class="sev sev-${x.lvl}">${NIVEAUX[x.lvl]}</span><div style="display:grid;gap:2px;min-width:0">
+        <button class="quiet" data-eleve="${esc(x.base)}|${esc(x.k)}" style="justify-self:start;min-height:0;padding:0;border:0;font-size:16px;color:var(--ink)">${esc(x.name)} · ${esc(x.base)}</button>
+        <span class="small">${x.sig.map(esc).join(" · ")}</span><div>${sPill(D.suivi[x.base],x.k)}</div></div></div>`,"Voir les autres élèves")
+      :`<p class="small muted">${Y.faites?"Aucun cas préoccupant dans les séances de cette année.":"Aucune séance terminée pour cette année."}</p>`}
+    <div class="row" style="margin-top:12px"><button class="ghost" id="yPdf">Rapport PDF de l'année</button><span class="small muted" id="yPdfMsg"></span></div>`;
+  card.querySelectorAll("[data-y]").forEach(b=>b.onclick=()=>{ YEAR=b.dataset.y; YPDF=null; renderYear(D); });
+  card.querySelectorAll("[data-cl]").forEach(b=>b.onclick=()=>ouvrirEleve(b.dataset.cl,null));
+  card.querySelectorAll("[data-eleve]").forEach(b=>b.onclick=()=>{ const [base,k]=b.dataset.eleve.split("|"); ouvrirEleve(base,k); });
+  const yb=$("#yPdf"); if(YPDF&&YPDF.y===YEAR) yb.textContent="Enregistrer le PDF";
+  yb.onclick=async()=>{ const name=T(`Sociogramme - ${anneeNom(YEAR)} - vue d'ensemble - ${dans(0)}.pdf`);
+    if(YPDF&&YPDF.y===YEAR){ const r=await shareFile(YPDF.blob,name,"Rapport sociogramme"); $("#yPdfMsg").textContent=r==="ok"?"Rapport enregistré.":r==="cancel"?"":"Le rapport n'a pas pu être enregistré."; return; }
+    yb.disabled=true; yb.textContent="Préparation…";
+    try{ YPDF={y:YEAR,blob:await yearPdf(D,YEAR)}; yb.textContent="Enregistrer le PDF"; $("#yPdfMsg").textContent="Rapport prêt. Touche « Enregistrer le PDF »."; }
+    catch(e){ yb.textContent="Rapport PDF de l'année"; $("#yPdfMsg").textContent="Le rapport n'a pas pu être créé. Vérifie la connexion internet."; }
+    yb.disabled=false; };
+}
+async function yearPdf(D,y){
+  for(const u of LIBS) await loadScript(u);
+  const Y=yearData(D,y), {jsPDF}=window.jspdf, doc=new jsPDF({unit:"mm",format:"a4",compress:true});
+  const W=210,M=16,CW=W-2*M; let yy=0;
+  const color=(c,t="text")=>t==="text"?doc.setTextColor(...c):t==="fill"?doc.setFillColor(...c):doc.setDrawColor(...c);
+  const H2=(n,t)=>{ if(yy>255){ doc.addPage(); yy=20; } yy+=4; color(PDFC.green); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text(String(n).padStart(2,"0"),M,yy);
+    color(PDFC.ink); doc.setFontSize(15); doc.text(T(t),M+8,yy); yy+=2.5; color(PDFC.line,"draw"); doc.setLineWidth(.3); doc.line(M,yy,W-M,yy); yy+=6; };
+  const table=o=>{ doc.autoTable(Object.assign({startY:yy,margin:{left:M,right:M,bottom:20},theme:"plain",
+    styles:{font:"helvetica",fontSize:9,textColor:PDFC.ink,cellPadding:2,lineColor:PDFC.line,lineWidth:{bottom:.2},valign:"top"},
+    headStyles:{fontStyle:"bold",textColor:PDFC.muted,fontSize:8,fillColor:PDFC.sunk}},o)); yy=doc.lastAutoTable.finalY+6; };
+  color(PDFC.bg,"fill"); doc.rect(0,0,W,52,"F");
+  try{ doc.addImage(document.querySelector(".logo img").src,"PNG",M,9,28,34); }catch(e){}
+  color(PDFC.green); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text(T("VUE D'ENSEMBLE · CONFIDENTIEL"),M+36,16);
+  color(PDFC.ink); doc.setFontSize(24); doc.text(T(y==="autres"?"Autres classes":"Les classes de "+anneeNom(y)),M+36,27);
+  doc.setFont("helvetica","normal"); doc.setFontSize(11); color(PDFC.muted);
+  doc.text(T(`${Y.faites} classe${Y.faites>1?"s":""} sur ${Y.cls.length} ont fait le sociogramme · ${new Date().toLocaleDateString("fr-BE")}`),M+36,35);
+  doc.text(T("Institut La Vertu · Réservé à la direction, au centre PMS et aux éducateurs"),M+36,41);
+  yy=62;
+  const tiles=[["Classes faites",Y.faites+"/"+Y.cls.length,PDFC.sunk,PDFC.blue],["Priorités",Y.prio.filter(x=>x.lvl===1).length,PDFC.isoS,PDFC.iso],["À suivre",Y.prio.filter(x=>x.lvl===2).length,PDFC.peuS,PDFC.peu],["Isolés",Y.iso,PDFC.isoS,PDFC.iso],["Actions à faire",Y.ouvertes,PDFC.okS,PDFC.green]];
+  const tw=(CW-16)/5; tiles.forEach((t,i)=>{ const x=M+i*(tw+4); color(t[2],"fill"); doc.roundedRect(x,yy,tw,20,2,2,"F");
+    color(t[3]); doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.text(String(t[1]),x+4,yy+10); doc.setFontSize(8); doc.setFont("helvetica","normal"); color(PDFC.ink); doc.text(T(t[0]),x+4,yy+16); });
+  yy+=28;
+  H2(1,"Élèves à traiter en priorité");
+  if(Y.prio.length) table({head:[["Niveau","Élève","Classe","Ce que montrent les réponses","Suivi"]],
+    body:Y.prio.map(x=>{ const S=sOf(D.suivi[x.base],x.k); return [NIVEAUX[x.lvl],x.name,x.base,x.sig.join("\n"),S.n?`${S.notes} note(s), ${S.ouvertes.length} action(s) à faire`:"Pas encore de suivi"].map(T); }),
+    columnStyles:{0:{cellWidth:20,fontStyle:"bold"},1:{cellWidth:32,fontStyle:"bold"},2:{cellWidth:16},3:{cellWidth:72},4:{cellWidth:38,textColor:PDFC.muted}},
+    didParseCell:h=>{ if(h.section==="body"&&h.column.index===0){ const l=Y.prio[h.row.index].lvl; h.cell.styles.textColor=l===1?[255,255,255]:PDFC.iso; h.cell.styles.fillColor=l===1?PDFC.iso:PDFC.isoS; } }});
+  else { doc.setFontSize(10); color(PDFC.muted); doc.text(T("Aucun cas préoccupant dans les séances de cette année."),M,yy); yy+=8; }
+  H2(2,"Classe par classe");
+  table({head:[["Classe","Séance","Réponses","Isolés","Priorités","À suivre"]],
+    body:Y.cls.map(o=>[o.classe,o.live?"En cours":o.idx!==null?"Terminée le "+(o.date||""):"Pas encore faite",o.idx!==null?o.n+" / "+o.t:"-",o.idx!==null?o.iso:"-",o.idx!==null?o.A.filter(a=>a.lvl===1).length:"-",o.idx!==null?o.A.filter(a=>a.lvl===2).length:"-"].map(x=>T(String(x)))),
+    columnStyles:{0:{fontStyle:"bold"}}});
+  const acts=D.todo.filter(t=>anneeOf(t.base)===y).sort((a,b)=>(a.pour||"9999").localeCompare(b.pour||"9999"));
+  if(acts.length){ H2(3,"Actions en cours");
+    table({head:[["Pour le","Élève","Classe","Action","Qui"]],body:acts.map(a=>[a.pour?dfmt(a.pour):"Sans date",a.nom,a.base,a.texte,a.resp].map(T)),columnStyles:{0:{cellWidth:22},1:{cellWidth:32,fontStyle:"bold"},2:{cellWidth:16}}}); }
+  const n=doc.getNumberOfPages(); for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); color(PDFC.muted); doc.setFont("helvetica","normal");
+    doc.text(T(`Sociogramme · ${anneeNom(y)} · Vue d'ensemble · Confidentiel · généré le ${new Date().toLocaleDateString("fr-BE")}`),M,290); doc.text(`${i} / ${n}`,W-M,290,{align:"right"}); }
+  return doc.output("blob");
+}
 async function shareFile(blob,name,title){
   const file=new File([blob],name,{type:blob.type});
   try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title}); return "ok"; } }
@@ -1524,7 +1697,7 @@ $("#lockFile").addEventListener("change",e=>{ const f=e.target.files[0]; e.targe
   readBackup(f).then(d=>{ applyBackup(d); openLock(); $("#lockText").textContent="Sauvegarde restaurée. Tape ton code habituel."; })
     .catch(()=>{ $("#lockRestoreMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }); });
 /* mise à jour automatique : à l'ouverture (et au retour sur l'accueil), on regarde si une nouvelle version est en ligne */
-const APP_VERSION="2026-10-15p";
+const APP_VERSION="2026-10-15q";
 async function checkUpdate(){
   try{
     if(location.protocol!=="https:") return;
@@ -1540,7 +1713,7 @@ async function checkUpdate(){
 }
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&!$("#vHome").hidden) checkUpdate(); });
 /* au démarrage : écran d'accueil (ou séance en cours) */
-window.__socio={openResults,DEMO_DATA,DEMO_PREV,show,buildPdf:k=>buildPdf(k),workGroups:s=>workGroups(s)};
+window.__socio={yearPdf:y=>yearPdf(DASH,y),openResults,DEMO_DATA,DEMO_PREV,show,buildPdf:k=>buildPdf(k),workGroups:s=>workGroups(s)};
 renderHome();
 checkUpdate();
 })();
