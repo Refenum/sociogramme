@@ -313,6 +313,12 @@ tbody tr{cursor:pointer}
           <div class="row"><button class="ghost" id="qSave">Enregistrer les questions</button><span id="qMsg" class="small muted"></span></div>
           <p class="small muted">Vide une case pour retirer une question. Les séances déjà faites gardent leurs questions.</p>
         </section>
+        <section class="card" aria-labelledby="t-bk">
+          <h3 id="t-bk">Sauvegarde</h3>
+          <p class="small muted" id="bkInfo">Garde une copie de tout (ton code, les séances, la liste) dans un fichier. Les réponses y restent chiffrées : sans ton code, le fichier est illisible.</p>
+          <div class="row"><button class="ghost" id="bkSave">Télécharger une sauvegarde</button><label class="filebtn ghost" for="bkFile">Restaurer<input type="file" id="bkFile" accept=".json,application/json"></label></div>
+          <p class="small muted" id="bkMsg" aria-live="polite"></p>
+        </section>
       </div>
     </div>
   </main>
@@ -632,6 +638,8 @@ function renderRef(){
     if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Confirmer"; return; }
     const a=get(K.ar,[]); a.splice(+b.dataset.del,1); put(K.ar,a); renderRef(); });
   showEcole(); renderQEdit();
+  const last=get("sociogramme-derniere-sauvegarde",0);
+  $("#bkInfo").textContent=(last?`Dernière sauvegarde : ${new Date(last).toLocaleDateString("fr-BE")}. `:"Aucune sauvegarde pour l'instant. ")+"Garde une copie de tout (ton code, les séances, la liste) dans un fichier. Les réponses y restent chiffrées.";
 }
 function showEcole(){
   if(!ECOLE||!ECOLE.classes){ $("#ecoleInfo").textContent="Aucune liste chargée. Charge le fichier une seule fois : l'éducateur n'aura plus qu'à choisir la classe."; $("#ecoleClear").hidden=true; return; }
@@ -846,6 +854,30 @@ $("#view").onchange=()=>render();
 if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
+
+/* ---------- garder les données : stockage persistant + sauvegarde dans un fichier ---------- */
+try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
+const BK_KEYS=[K.code,K.ar,K.live,K.q,K.ec];
+$("#bkSave").onclick=()=>{
+  const data={app:"sociogramme-la-vertu",v:1,date:new Date().toISOString()};
+  BK_KEYS.forEach(k=>{ const v=get(k,null); if(v!==null) data[k]=v; });
+  const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="sauvegarde-sociogramme-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
+  put("sociogramme-derniere-sauvegarde",Date.now());
+  $("#bkMsg").textContent="Sauvegarde téléchargée. Range le fichier dans OneDrive ou dans l'app Fichiers.";
+};
+$("#bkFile").addEventListener("change",e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  const rd=new FileReader(); rd.onload=()=>{
+    try{ const d=JSON.parse(rd.result); if(d.app!=="sociogramme-la-vertu") throw 0;
+      BK_KEYS.forEach(k=>{ if(d[k]!==undefined) put(k,d[k]); });
+      ECOLE=get(K.ec,null); LIVE=get(K.live,null); PUB=null;
+      $("#bkMsg").textContent="Sauvegarde restaurée. Retape ton code si on te le demande."; renderRef();
+    }catch(err){ $("#bkMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }
+  }; rd.readAsText(f);
+});
 /* au démarrage : écran d'accueil (ou séance en cours) */
 window.__socio={openResults,DEMO_DATA,show,openKiosk:()=>{}};
 renderHome();
