@@ -72,7 +72,7 @@ button:disabled{opacity:.4;cursor:default}
 button:focus-visible,select:focus-visible,input:focus-visible,.filebtn:focus-within{outline:3px solid var(--blue);outline-offset:2px}
 .filebtn input{display:none}
 svg.i{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-select,input[type=text]{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-height:48px}
+select,input[type=text],input[type=password]{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-height:48px}
 label{font-weight:700;font-size:14px}
 .field{display:grid;gap:6px;min-width:0}
 .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
@@ -209,6 +209,16 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
 .wg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:10px}
 .chip.warn{border-color:var(--peu);color:var(--peu)}
 .resbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.suivi{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
+.ev{display:grid;gap:2px;padding:8px 10px;border-radius:10px;background:var(--sunk)}
+.ev.act{grid-template-columns:auto 1fr;gap:10px;align-items:start;cursor:pointer;font-weight:400}
+.ev.act input{width:20px;height:20px;margin-top:2px}
+.ev.done{opacity:.6}
+.sform{display:grid;gap:8px}
+.sform select,.sform input{min-height:42px}
+.sform textarea{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px;min-height:70px;resize:vertical;width:100%}
+.spill{display:inline-flex;font-size:12px;font-weight:700;border-radius:99px;padding:2px 9px;white-space:normal}
+.sp-none{background:var(--coral-soft);color:var(--coral)} .sp-old{background:var(--peu-soft);color:var(--peu)} .sp-ok{background:var(--green-soft);color:var(--green)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -323,7 +333,7 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
   <!-- ============ ESPACE RÉFÉRENT ============ -->
   <main id="vRef" class="app" hidden>
     <div class="row" style="justify-content:space-between">
-      <div style="display:grid;gap:4px"><span class="eyebrow">Espace référent · déverrouillé</span><h1>Les réponses des classes</h1></div>
+      <div style="display:grid;gap:4px"><span class="eyebrow" id="refWho">Espace référent · déverrouillé</span><h1>Les réponses des classes</h1></div>
       <button class="ghost" id="refLock"><svg class="i"><use href="#i-lock"/></svg>Verrouiller</button>
     </div>
     <div id="bkWarn" class="notice warn" hidden><svg class="i"><use href="#i-info"/></svg><div style="display:grid;gap:8px"><span id="bkWarnTxt"></span><div><button class="ghost" id="bkWarnBtn">Sauvegarder maintenant</button></div></div></div>
@@ -345,6 +355,19 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
           <label class="row" style="gap:10px;font-weight:400;align-items:flex-start"><input type="checkbox" id="qOpen" style="width:22px;height:22px;margin-top:2px"> <span>Ajouter à la fin : « Y a-t-il quelque chose que tu voudrais dire à un adulte ? » (facultatif pour l'élève, chiffré comme le reste)</span></label>
           <div class="row"><button class="ghost" id="qSave">Enregistrer les questions</button><span id="qMsg" class="small muted"></span></div>
           <p class="small muted">Vide une case pour retirer une question. Les séances déjà faites gardent leurs questions.</p>
+        </section>
+        <section class="card" aria-labelledby="t-acc">
+          <h3 id="t-acc">Accès complets</h3>
+          <p class="small muted">Chaque personne a son propre code à 6 chiffres. Tous ouvrent les mêmes réponses, la même fiche de suivi et les mêmes réglages.</p>
+          <div id="accList" class="list"></div>
+          <div class="sform">
+            <div class="field"><label for="accNom">Nom de la personne</label><input type="text" id="accNom" placeholder="ex. : Directeur" autocomplete="off"></div>
+            <div class="row"><div class="field" style="flex:1 1 140px"><label for="accCode">Son code (6 chiffres)</label><input type="password" id="accCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></div>
+              <div class="field" style="flex:1 1 140px"><label for="accCode2">Le retaper</label><input type="password" id="accCode2" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></div></div>
+            <div><button class="ghost" id="accAdd">Donner un accès complet</button></div>
+            <p class="small muted" id="accMsg" aria-live="polite"></p>
+            <p class="small muted">Fais taper le code par la personne elle-même. Il ne s'affiche jamais et n'est enregistré nulle part en clair.</p>
+          </div>
         </section>
         <section class="card" aria-labelledby="t-educ">
           <h3 id="t-educ">Code de l'éducateur</h3>
@@ -370,6 +393,7 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
       <div class="resbar">
         <div class="field" style="flex:0 1 300px"><label for="view">Afficher</label><select id="view"></select></div>
         <div class="field" style="flex:0 1 240px" id="cmpBox" hidden><label for="cmp">Comparer avec</label><select id="cmp"></select></div>
+        <div class="field" style="flex:0 1 220px"><label for="pdfKind">Rapport pour</label><select id="pdfKind"><option value="complet">Centre PMS (complet)</option><option value="educ">Éducateur</option><option value="titu">Titulaire</option></select></div>
         <button id="pdfBtn">Rapport PDF</button>
       </div>
     </div>
@@ -447,7 +471,7 @@ const QDEF=["Avec qui aimes-tu travailler en classe ?","À qui demandes-tu de l'
 const NB=2;
 
 /* ---------- stockage local (tout reste sur cet iPad) ---------- */
-const K={ec:"sociogramme-eleves",live:"sociogramme-collecte",lives:"sociogramme-seances",ar:"sociogramme-archives",code:"sociogramme-code",q:"sociogramme-questions",educ:"sociogramme-code-educ",qopen:"sociogramme-question-ouverte",bk:"sociogramme-derniere-sauvegarde"};
+const K={ec:"sociogramme-eleves",live:"sociogramme-collecte",lives:"sociogramme-seances",ar:"sociogramme-archives",code:"sociogramme-code",q:"sociogramme-questions",educ:"sociogramme-code-educ",qopen:"sociogramme-question-ouverte",bk:"sociogramme-derniere-sauvegarde",suivi:"sociogramme-suivi",codes:"sociogramme-codes"};
 const get=(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const put=(k,v,what)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ oups(what||"Enregistrement impossible.","L’iPad n’arrive pas à garder les données (navigation privée ou mémoire pleine). Préviens M. Ahkim avant de continuer."); return false; } };
 const del=k=>{ try{ localStorage.removeItem(k); }catch(e){} };
@@ -466,12 +490,26 @@ async function createCode(pin){
   const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
   const priv=await S.exportKey("pkcs8",kp.privateKey), pub=await S.exportKey("spki",kp.publicKey);
   const ct=await S.encrypt({name:"AES-GCM",iv},await wrapKey(pin,salt),priv);
-  if(!put(K.code,{v:1,salt:b64(salt),iv:b64(iv),priv:b64(ct),pub:b64(pub)})) throw new Error("save");
+  if(!put(K.code,{v:1,nom:"Référent numérique",salt:b64(salt),iv:b64(iv),priv:b64(ct),pub:b64(pub)})) throw new Error("save");
+  PRIV_RAW=priv; WHO="Référent numérique";
   return kp.privateKey;
 }
+let PRIV_RAW=null, WHO="";
+/* essaie le code du référent, puis les autres accès complets (directeur…) */
 async function openCode(pin){
-  const c=get(K.code,null); const raw=await S.decrypt({name:"AES-GCM",iv:unb64(c.iv)},await wrapKey(pin,unb64(c.salt)),unb64(c.priv));
-  return S.importKey("pkcs8",raw,{name:"RSA-OAEP",hash:"SHA-256"},false,["decrypt"]);
+  const main=get(K.code,null); const autres=get(K.codes,[])||[];
+  for(const c of [main,...autres]){ if(!c) continue;
+    try{ const raw=await S.decrypt({name:"AES-GCM",iv:unb64(c.iv)},await wrapKey(pin,unb64(c.salt)),unb64(c.priv));
+      PRIV_RAW=raw; WHO=c.nom||"Référent numérique";
+      return S.importKey("pkcs8",raw,{name:"RSA-OAEP",hash:"SHA-256"},false,["decrypt"]); }catch(e){} }
+  throw new Error("code");
+}
+async function addAccess(nom,pin){
+  if(!PRIV_RAW) throw new Error("verrouillé");
+  const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await S.encrypt({name:"AES-GCM",iv},await wrapKey(pin,salt),PRIV_RAW);
+  const L=get(K.codes,[])||[]; L.push({id:Date.now().toString(36),nom,date:new Date().toISOString(),salt:b64(salt),iv:b64(iv),priv:b64(ct)});
+  if(!put(K.codes,L,"Accès non enregistré.")) throw new Error("save");
 }
 let PUB=null;
 async function pubKey(){ if(PUB) return PUB; const c=get(K.code,null); if(!c) return null;
@@ -679,7 +717,7 @@ function openLock(){
 }
 function lockTexts(){
   $("#lockTitle").textContent=MODE==="open"?"Espace référent":MODE==="new"?"Crée ton code secret":"Retape ton code";
-  $("#lockText").textContent=MODE==="open"?"Tape ton code à 6 chiffres.":MODE==="new"?"6 chiffres, que toi seul connais. Il protège toutes les réponses : sans lui, personne ne peut les lire.":"Pour être sûr, tape-le une deuxième fois.";
+  $("#lockText").textContent=MODE==="open"?"Tape ton code à 6 chiffres (référent, direction…).":MODE==="new"?"6 chiffres, que toi seul connais. Il protège toutes les réponses : sans lui, personne ne peut les lire.":"Pour être sûr, tape-le une deuxième fois.";
 }
 function drawPad(){
   $("#dots").innerHTML=Array.from({length:6},(_,i)=>`<i class="${i<PIN.length?"on":""}"></i>`).join("");
@@ -711,16 +749,16 @@ $("#lockCancel").onclick=()=>renderHome();
 $("#forgotBtn").onclick=()=>{ $("#forgotBox").hidden=!$("#forgotBox").hidden; };
 $("#forgotWipe").onclick=function(){
   if(!this.classList.contains("armed")){ this.classList.add("armed"); this.textContent="Confirmer : tout effacer"; return; }
-  [K.code,K.ar,K.live,K.lives,K.educ,"sociogramme-essais"].forEach(del); LIVES=[]; LIVE=null; PUB=null; PRIV=null; openLock();
+  [K.code,K.codes,K.ar,K.live,K.lives,K.educ,K.suivi,"sociogramme-essais"].forEach(del); LIVES=[]; LIVE=null; PUB=null; PRIV=null; PRIV_RAW=null; openLock();
 };
 /* verrouillage automatique : quand l'iPad se met en veille ou après 10 minutes sans toucher */
-function lockNow(){ PRIV=null; if(!$("#vRef").hidden||(!$("#vRes").hidden&&!resDemo)) renderHome(); }
+function lockNow(){ PRIV=null; PRIV_RAW=null; if(!$("#vRef").hidden||(!$("#vRes").hidden&&!resDemo)) renderHome(); }
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) lockNow(); });
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,()=>{ clearTimeout(lockTimer); if(PRIV) lockTimer=setTimeout(lockNow,600000); }));
 
 /* ============ ESPACE RÉFÉRENT ============ */
 function openRef(){ if(!PRIV){ openLock(); return; } renderRef(); show("vRef"); }
-$("#refLock").onclick=()=>{ PRIV=null; renderHome("Espace référent verrouillé."); };
+$("#refLock").onclick=()=>{ PRIV=null; PRIV_RAW=null; renderHome("Espace référent verrouillé."); };
 function renderRef(){
   const ar=get(K.ar,[]); const items=[];
   LIVES.forEach(L=>items.push({live:true,id:L.id,classe:L.classe,date:L.debut,n:L.done.length,t:L.eleves.length}));
@@ -744,6 +782,13 @@ function renderRef(){
   const besoin=(ar.length||LIVES.length)&&(!last||jours>=7);
   $("#bkWarn").hidden=!besoin;
   $("#bkWarnTxt").textContent=!last?"Aucune sauvegarde n'a encore été faite. Si l'iPad est réinitialisé, toutes les réponses seront perdues.":`Dernière sauvegarde il y a ${jours} jours. Fais-en une nouvelle pour ne rien perdre.`;
+  $("#refWho").textContent=`Espace référent · ouvert par : ${WHO||"Référent numérique"}`;
+  const main=get(K.code,null), autres=get(K.codes,[])||[];
+  $("#accList").innerHTML=`<div class="coll" style="grid-template-columns:minmax(0,1fr) auto"><div><strong>${esc((main&&main.nom)||"Référent numérique")}</strong><br><span class="small muted">Code principal</span></div><span class="pill p-done">Accès complet</span></div>`+
+    autres.map(a=>`<div class="coll" style="grid-template-columns:minmax(0,1fr) auto"><div><strong>${esc(a.nom)}</strong><br><span class="small muted">Ajouté le ${dfmt(a.date)}</span></div><div class="acts"><span class="pill p-done">Accès complet</span><button class="danger" data-acc="${esc(a.id)}">Retirer</button></div></div>`).join("");
+  $("#accList").querySelectorAll("[data-acc]").forEach(b=>b.onclick=()=>{
+    if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Confirmer le retrait"; return; }
+    const L=(get(K.codes,[])||[]).filter(x=>x.id!==b.dataset.acc); put(K.codes,L); $("#accMsg").textContent="Accès retiré : ce code n'ouvre plus rien."; renderRef(); });
   const e=get(K.educ,null);
   $("#educInfo").textContent=e?"Un code éducateur est enregistré : il est demandé quand on touche « Adulte » pendant la séance. Donne-le seulement à l'éducateur.":"Pas encore de code : pour sortir de la séance, il faut maintenir « Adulte » appuyé. Un code à 4 chiffres est plus sûr.";
   $("#qOpen").checked=get(K.qopen,true)!==false;
@@ -760,6 +805,16 @@ function renderQEdit(){ const q=questions(); $("#qEdit").innerHTML=[0,1,2,3,4].m
 $("#qSave").onclick=()=>{ const q=[0,1,2,3,4].map(i=>$("#q"+i).value.trim()).filter(Boolean);
   if(!q.length){ $("#qMsg").textContent="Garde au moins une question."; return; }
   if(put(K.q,q)&&put(K.qopen,$("#qOpen").checked)) $("#qMsg").textContent="Questions enregistrées pour les prochaines séances."; };
+$("#accAdd").onclick=async()=>{
+  const nom=$("#accNom").value.trim(), c1=$("#accCode").value.trim(), c2=$("#accCode2").value.trim(), m=$("#accMsg");
+  if(!nom){ m.textContent="Indique le nom de la personne."; return; }
+  if(!/^\d{6}$/.test(c1)){ m.textContent="Le code doit avoir exactement 6 chiffres."; return; }
+  if(c1!==c2){ m.textContent="Les deux codes sont différents."; return; }
+  m.textContent="Création de l'accès…";
+  try{ await addAccess(nom,c1); ["#accNom","#accCode","#accCode2"].forEach(x=>$(x).value=""); renderRef();
+    $("#accMsg").textContent=`Accès complet créé pour ${nom}. Pense à faire une sauvegarde.`; }
+  catch(err){ m.textContent="L'accès n'a pas pu être créé. Verrouille, rouvre l'Espace référent avec ton code, puis réessaie."; }
+};
 $("#educSave").onclick=async()=>{ const v=$("#educCode").value.trim();
   if(!/^\d{4}$/.test(v)){ $("#educMsg").textContent="Le code doit avoir exactement 4 chiffres."; return; }
   const salt=b64(crypto.getRandomValues(new Uint8Array(12)));
@@ -844,7 +899,57 @@ const DEMO_PREV={key:"demo-prev",base:"1X",classe:"1X · classe exemple",date:"1
   if(x[0]==="Hamza B.") x[3]="Yanis R.;Adam E.";
   if(x[0]==="Rayan S.") x[1]="Mehdi O.;Ilyes T.";
   return x; }))};
-let result=null, selected=null, sim=null, resDemo=false, CUR=null, CMP=null, PDFBLOB=null;
+let result=null, selected=null, sim=null, resDemo=false, CUR=null, CMP=null, PDFBLOB=null, SUIVI=[];
+/* ---------- suivi par élève : notes et actions, chiffrées comme les réponses ---------- */
+const DEMO_SUIVI=[
+  {id:"d1",k:norm("Sofia A."),t:"action",date:"2026-10-02T10:00:00",resp:"Centre PMS",texte:"Entretien individuel avec Sofia"},
+  {id:"d2",k:norm("Sofia A."),t:"note",date:"2026-09-28T12:00:00",auteur:"Éducateur",texte:"Seule à la récréation trois jours de suite."},
+  {id:"d3",k:norm("Hamza B."),t:"note",date:"2026-10-13T09:00:00",auteur:"Titulaire",texte:"Placé à côté de Mehdi en classe, ça se passe bien."}];
+const dfmt=iso=>{ try{ return new Date(iso).toLocaleDateString("fr-BE"); }catch(e){ return ""; } };
+async function loadSuivi(d,demo){
+  SUIVI=[]; if(demo){ SUIVI=DEMO_SUIVI.map(x=>({...x})); return; }
+  const L=(get(K.suivi,{})||{})[d.base]||[];
+  for(const x of L){ try{ SUIVI.push(await unseal(x,PRIV)); }catch(e){} }
+}
+function suiviOf(k){
+  const ev=SUIVI.filter(e=>e.k===k), faits=new Map(ev.filter(e=>e.t==="fait").map(e=>[e.ref,e.date]));
+  const items=ev.filter(e=>e.t!=="fait").map(e=>({...e,fait:faits.has(e.id),faitLe:faits.get(e.id)})).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const last=ev.reduce((m,e)=>e.date>m?e.date:m,"");
+  return {items,notes:items.filter(e=>e.t==="note").length,ouvertes:items.filter(e=>e.t==="action"&&!e.fait),last,jours:last?Math.floor((Date.now()-new Date(last))/86400000):null};
+}
+async function addSuivi(ev){
+  ev={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:new Date().toISOString(),...ev};
+  if(!resDemo){
+    try{ const all=get(K.suivi,{})||{}; (all[CUR.base]=all[CUR.base]||[]).push(await seal(ev)); if(!put(K.suivi,all,"Suivi non enregistré.")) return; }
+    catch(e){ oups("Suivi non enregistré.","Le chiffrement n'a pas fonctionné."); return; }
+  }
+  SUIVI.push(ev); PDFBLOB=null; $("#pdfBtn").textContent="Rapport PDF"; render();
+}
+function suiviPill(k){
+  const S=suiviOf(k);
+  if(!S.items.length) return `<span class="spill sp-none">Pas encore de suivi</span>`;
+  if(S.ouvertes.length&&S.jours>=14) return `<span class="spill sp-old">Rien de nouveau depuis ${S.jours} jours · ${S.ouvertes.length} action${S.ouvertes.length>1?"s":""} à faire</span>`;
+  return `<span class="spill sp-ok">${S.notes} note${S.notes>1?"s":""} · ${S.ouvertes.length} action${S.ouvertes.length>1?"s":""} à faire</span>`;
+}
+function suiviHTML(k){
+  const S=suiviOf(k); let qui=""; try{ qui=localStorage.getItem("sociogramme-auteur")||""; }catch(e){}
+  return `<div class="suivi"><h3>Suivi</h3>
+    ${S.items.length?`<div class="list">${S.items.map(e=>e.t==="note"
+      ?`<div class="ev"><span class="small muted">Note · ${dfmt(e.date)}${e.auteur?" · "+esc(e.auteur):""}</span><div>${esc(e.texte)}</div></div>`
+      :`<label class="ev act${e.fait?" done":""}"><input type="checkbox" data-done="${esc(e.id)}" ${e.fait?"checked disabled":""}><span><b>${esc(e.texte)}</b><br><span class="small muted">Action${e.resp?" · "+esc(e.resp):""} · ${dfmt(e.date)}${e.fait?" · faite le "+dfmt(e.faitLe):" · à faire"}</span></span></label>`).join("")}</div>`
+      :`<p class="small muted">Aucune note pour l'instant.</p>`}
+    <div class="sform"><div class="row"><select id="sType" style="width:auto"><option value="note">Note</option><option value="action">Action à faire</option></select>
+      <input type="text" id="sQui" placeholder="Auteur ou responsable (ex. : PMS)" value="${esc(qui)}" style="flex:1 1 180px;width:auto"></div>
+      <textarea id="sTxt" placeholder="Ex. : entretien fait, observé seul à la récré, parents contactés…"></textarea>
+      <div><button class="ghost" id="sAdd">Ajouter au suivi</button></div></div></div>`;
+}
+function bindSuivi(k){
+  const b=$("#sAdd"); if(!b) return;
+  b.onclick=()=>{ const t=$("#sType").value, txt=$("#sTxt").value.trim(), qui=$("#sQui").value.trim(); if(!txt){ $("#sTxt").focus(); return; }
+    try{ localStorage.setItem("sociogramme-auteur",qui); }catch(e){}
+    addSuivi(t==="note"?{k,t,auteur:qui,texte:txt}:{k,t,resp:qui,texte:txt}); };
+  document.querySelectorAll("#fiche [data-done]").forEach(c=>c.onchange=()=>{ if(c.checked) addSuivi({k,t:"fait",ref:c.dataset.done}); });
+}
 function buildResult(d){
   const names=new Map(); const add=n=>{const k=norm(n); if(k&&!names.has(k)) names.set(k,String(n).trim()); return k;};
   d.eleves.forEach(add);
@@ -868,7 +973,8 @@ function openResults(d,demo){
   $("#cmpBox").hidden=!opts.length;
   $("#cmp").innerHTML='<option value="">Aucune comparaison</option>'+opts.map(o=>`<option value="${o.v}">${esc(o.t)}</option>`).join("");
   $("#view").innerHTML=`<option value="all">${d.q.length>1?"Toutes les questions ensemble":"Les réponses"}</option>`+d.q.map((l,i)=>`<option value="${i}">${esc(l)}</option>`).join("");
-  selected=null; sim=null; show("vRes"); render();
+  selected=null; sim=null; SUIVI=[]; show("vRes"); render();
+  loadSuivi(d,demo).then(()=>{ if(CUR===d) render(); });
 }
 $("#resBack").onclick=()=>{ result=null; CMP=null; if(PRIV) openRef(); else openLock(); };
 $("#cmp").onchange=async()=>{ const v=$("#cmp").value; PDFBLOB=null; $("#pdfBtn").textContent="Rapport PDF";
@@ -977,7 +1083,7 @@ function render(){
   const P=priorites().filter(x=>x.lvl<=3), abs=priorites().filter(x=>x.lvl===4);
   $("#critCard").innerHTML=`<div class="row" style="justify-content:space-between"><h2 id="t-crit">À traiter en priorité</h2><span class="small muted">Toutes les questions ensemble</span></div>`+
     (P.length?`<div>${P.map(x=>`<div class="crit"><span class="sev sev-${x.lvl}">${NIVEAUX[x.lvl]}</span><div style="display:grid;gap:2px;min-width:0"><button class="quiet" data-sel="${esc(x.k)}" style="justify-self:start;min-height:0;padding:0;border:0;font-size:16px;color:var(--ink)">${esc(x.name)}</button>
-      <span class="small">${x.sig.map(esc).join(" · ")}</span><span class="small muted">Piste : ${esc(PISTES[x.lvl])}</span></div></div>`).join("")}</div>`
+      <span class="small">${x.sig.map(esc).join(" · ")}</span><span class="small muted">Piste : ${esc(PISTES[x.lvl])}</span><div>${suiviPill(x.k)}</div></div></div>`).join("")}</div>`
       :`<p class="muted">Aucun cas préoccupant dans cette séance.</p>`)+
     (abs.length?`<p class="small muted">Pas répondu : ${abs.map(x=>esc(x.name)).join(", ")}. ${esc(PISTES[4])}</p>`:"");
   $("#critCard").querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>{ selected=b.dataset.sel; render(); $("#fiche").scrollIntoView({block:"center"}); });
@@ -1045,7 +1151,9 @@ function render(){
       <div class="tablewrap"><table class="ftable"><thead><tr><th>Question</th><th>Choisi par</th><th>A choisi</th></tr></thead><tbody>
       ${parQ.map(q=>`<tr><td>${esc(q.l)}</td><td><strong>${q.recu}</strong>${q.recu?` : ${q.par.map(n=>esc(n)+(q.mut.includes(n)?" ↔":"")).join(", ")}`:' <span class="badge b-iso">personne</span>'}</td><td>${q.choisis.length?q.choisis.map(n=>esc(n)+(q.mut.includes(n)?" ↔":"")).join(", "):(q.aucun?'<span class="badge b-nr">personne</span>':'<span class="muted">—</span>')}</td></tr>`).join("")}
       </tbody></table></div>
+      ${suiviHTML(s.k)}
       <div class="row"><button class="ghost" id="copyFiche">Copier la fiche</button><button class="quiet" id="clearSel">Fermer</button><span id="copyMsg" class="muted small"></span></div>`;
+    bindSuivi(s.k);
     $("#clearSel").onclick=()=>{selected=null; render();};
     $("#copyFiche").onclick=()=>{
       const txt=`Sociogramme – ${s.name}\nSituation : ${CAT[s.cat][0]}${s.repondu?"":" (n'a pas répondu)"}\n${grp?"Groupe : "+grp.filter(x=>x.k!==s.k).map(x=>x.name).join(", "):"Aucun lien réciproque"}\n\n`+
@@ -1105,7 +1213,14 @@ const LIGHT={"--iso":"#c0392b","--peu":"#a86d12","--ok":"#1b8c48","--star":"#962
 function svgToPng(inner,w,h){ return new Promise((ok,ko)=>{ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${inner}</svg>`;
   const img=new Image(); img.onload=()=>{ const c=document.createElement("canvas"); c.width=w*2; c.height=h*2; const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height); ok(c.toDataURL("image/jpeg",.85)); };
   img.onerror=ko; img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); }); }
-async function buildPdf(){
+const KINDS={complet:{titre:"RAPPORT COMPLET",pour:"Réservé au centre PMS et au référent numérique",court:"Complet"},
+  educ:{titre:"RAPPORT ÉDUCATEUR",pour:"Réservé à l'éducateur de la classe",court:"Éducateur"},
+  titu:{titre:"RAPPORT TITULAIRE",pour:"Réservé au titulaire de la classe",court:"Titulaire"}};
+const CONSEIL_TITU={1:"Veiller à ce qu'il ne reste jamais seul en travail de groupe : le placer avec un camarade de son groupe proposé. Signaler tout changement à l'éducateur.",
+  2:"Le placer en binôme avec un camarade vers qui il va. Rester attentif aux moments sans adulte (début de cours, sorties).",
+  3:"Varier les binômes pour l'aider à créer des liens réciproques."};
+async function buildPdf(kind){
+  kind=KINDS[kind]?kind:"complet"; const KD=KINDS[kind];
   for(const u of LIBS) await loadScript(u);
   const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4",compress:true});
   const W=210, M=16, CW=W-2*M; let y=0;
@@ -1122,41 +1237,60 @@ async function buildPdf(){
   /* ---- en-tête ---- */
   color(PDFC.bg,"fill"); doc.rect(0,0,W,52,"F");
   try{ const logo=document.querySelector(".logo img").src; doc.addImage(logo,"PNG",M,9,28,34); }catch(e){}
-  color(PDFC.green); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text(T("RAPPORT SOCIOGRAMME · CONFIDENTIEL"),M+36,16);
+  color(PDFC.green); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text(T(KD.titre+" · CONFIDENTIEL"),M+36,16);
   color(PDFC.ink); doc.setFontSize(24); doc.text(T("Classe "+(d.base||d.classe)),M+36,27);
   doc.setFont("helvetica","normal"); doc.setFontSize(11); color(PDFC.muted);
   doc.text(T(`Séance du ${d.date||"-"} · ${nRep} élèves sur ${all.size} ont répondu`),M+36,35);
-  doc.text(T("Institut La Vertu · Réservé à l'équipe éducative et au centre PMS"),M+36,41);
+  doc.text(T("Institut La Vertu · "+KD.pour),M+36,41);
   y=62;
   /* ---- chiffres clés ---- */
   const allArr=[...all.values()];
-  const tiles=[["Élèves",all.size,PDFC.sunk,PDFC.blue],["Priorités",PR.filter(x=>x.lvl===1).length,PDFC.isoS,PDFC.iso],["À suivre",PR.filter(x=>x.lvl===2).length,PDFC.peuS,PDFC.peu],["Isolés",allArr.filter(s=>s.cat==="iso").length,PDFC.isoS,PDFC.iso],["Liens réciproques",allE.filter(e=>e.mut).length,PDFC.okS,PDFC.green]];
-  const tw=(CW-4*4)/5; tiles.forEach((t,i)=>{ const x=M+i*(tw+4); color(t[2],"fill"); doc.roundedRect(x,y,tw,20,2,2,"F");
+  const tiles=kind==="titu"?[["Élèves",all.size,PDFC.sunk,PDFC.blue],["À accompagner",PR.filter(x=>x.lvl<=3).length,PDFC.isoS,PDFC.iso],["Groupes de travail",workGroups(+$("#wgSize").value).length,PDFC.okS,PDFC.green],["Pas répondu",all.size-nRep,PDFC.sunk,PDFC.muted]]
+    :[["Élèves",all.size,PDFC.sunk,PDFC.blue],["Priorités",PR.filter(x=>x.lvl===1).length,PDFC.isoS,PDFC.iso],["À suivre",PR.filter(x=>x.lvl===2).length,PDFC.peuS,PDFC.peu],["Isolés",allArr.filter(s=>s.cat==="iso").length,PDFC.isoS,PDFC.iso],["Liens réciproques",allE.filter(e=>e.mut).length,PDFC.okS,PDFC.green]];
+  const tw=(CW-(tiles.length-1)*4)/tiles.length; tiles.forEach((t,i)=>{ const x=M+i*(tw+4); color(t[2],"fill"); doc.roundedRect(x,y,tw,20,2,2,"F");
     color(t[3]); doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.text(String(t[1]),x+4,y+10); doc.setFontSize(8); doc.setFont("helvetica","normal"); color(PDFC.ink); doc.text(T(t[0]),x+4,y+16); });
   y+=28;
   /* ---- 1. priorités ---- */
   let sec=1;
-  H2(sec++,"À traiter en priorité");
   const crit=PR.filter(x=>x.lvl<=3);
+  const sigOf=x=>kind==="educ"?x.sig.map(t=>/A laissé un message/.test(t)?"A laissé un message (transmis au centre PMS)":t):x.sig;
+  const suiviTxt=x=>{ const S=suiviOf(x.k); if(!S.items.length) return "Pas encore de suivi"; return `${S.notes} note(s), ${S.ouvertes.length} action(s) à faire`+(S.ouvertes.length&&S.jours>=14?` · rien depuis ${S.jours} j`:""); };
+  if(kind==="titu"){
+    H2(sec++,"Élèves à accompagner en classe");
+    if(crit.length) table({head:[["Élève","Conseil en classe"]],body:crit.map(x=>[x.name,CONSEIL_TITU[x.lvl]].map(T)),columnStyles:{0:{cellWidth:40,fontStyle:"bold"}}});
+    else P("Aucun élève ne demande une attention particulière dans cette séance.",10,PDFC.muted);
+    P("Les raisons détaillées sont suivies par l'éducateur et le centre PMS. Si tu observes un changement (élève seul, conflit, absences), préviens l'éducateur.",9,PDFC.muted);
+  } else {
+  H2(sec++,"À traiter en priorité");
   if(crit.length){
     table({head:[["Niveau","Élève","Ce que montrent les réponses","Piste d'action"]],
-      body:crit.map(x=>[NIVEAUX[x.lvl],x.name,x.sig.join("\n"),PISTES[x.lvl]].map(T)),
-      columnStyles:{0:{cellWidth:22,fontStyle:"bold"},1:{cellWidth:30,fontStyle:"bold"},2:{cellWidth:70},3:{cellWidth:56,textColor:PDFC.muted}},
+      body:crit.map(x=>[NIVEAUX[x.lvl],x.name+"\n"+suiviTxt(x),sigOf(x).join("\n"),PISTES[x.lvl]].map(T)),
+      columnStyles:{0:{cellWidth:22,fontStyle:"bold"},1:{cellWidth:34,fontStyle:"bold"},2:{cellWidth:68},3:{cellWidth:54,textColor:PDFC.muted}},
       didParseCell:h=>{ if(h.section==="body"&&h.column.index===0){ const l=crit[h.row.index].lvl; h.cell.styles.textColor=l===1?[255,255,255]:l===2?PDFC.iso:PDFC.peu; h.cell.styles.fillColor=l===1?PDFC.iso:l===2?PDFC.isoS:PDFC.peuS; } }});
   } else P("Aucun cas préoccupant dans cette séance.",10,PDFC.muted);
   const abs=PR.filter(x=>x.lvl===4); if(abs.length) P(`Pas répondu : ${abs.map(x=>x.name).join(", ")}. ${PISTES[4]}`,9,PDFC.muted);
+  /* ---- suivi ---- */
+  const avecSuivi=A.filter(x=>suiviOf(x.k).items.length).sort((a,b)=>a.lvl-b.lvl||a.name.localeCompare(b.name,"fr"));
+  H2(sec++,"Suivi de l'équipe");
+  if(avecSuivi.length){
+    const lignes=[]; avecSuivi.forEach(x=>suiviOf(x.k).items.forEach(e=>lignes.push([x.name,dfmt(e.date),e.t==="note"?"Note":"Action",e.texte,e.t==="note"?(e.auteur||""):(e.resp||""),e.t==="note"?"":(e.fait?"Faite le "+dfmt(e.faitLe):"À faire")])));
+    table({head:[["Élève","Date","Type","Détail","Qui","Statut"]],body:lignes.map(r=>r.map(T)),columnStyles:{0:{cellWidth:26,fontStyle:"bold"},1:{cellWidth:22},2:{cellWidth:15},4:{cellWidth:24},5:{cellWidth:24}},
+      didParseCell:h=>{ if(h.section==="body"&&h.column.index===5&&/faire/.test(h.cell.raw)){ h.cell.styles.textColor=PDFC.iso; h.cell.styles.fontStyle="bold"; } }});
+  } else P("Aucune note ni action enregistrée pour cette classe. Ajoute-les dans la fiche de chaque élève (Espace référent, résultats).",9,PDFC.muted);
+  }
   /* ---- 2. messages ---- */
-  const MS=[...result.msgs.entries()];
+  const MS=kind==="complet"?[...result.msgs.entries()]:[];
   if(MS.length){ H2(sec++,"Messages des élèves");
     P("À lire avec attention. Si un message signale un danger ou du harcèlement, suivre la procédure de l'école (direction, centre PMS).",9,PDFC.muted);
     table({head:[["Élève","Message"]],body:MS.map(([k,m])=>[result.names.get(k),m].map(T)),columnStyles:{0:{cellWidth:34,fontStyle:"bold"},1:{fontStyle:"italic"}}}); }
   /* ---- 3. évolution ---- */
-  const ev=evolution();
+  const ev=kind==="titu"?null:evolution();
   if(ev){ H2(sec++,`Évolution depuis la séance du ${CMP.date}`);
     const ch=ev.filter(e=>e.t!=="stable");
     if(ch.length) table({head:[["Élève","Avant","Maintenant","Évolution"]],body:ch.map(e=>[e.name,`${CAT[e.cA][0]} (${e.avant} choix)`,`${CAT[e.cN][0]} (${e.maint} choix)`,e.t==="mieux"?"Mieux intégré":"Moins bien intégré"].map(T)),
       didParseCell:h=>{ if(h.section==="body"&&h.column.index===3){ h.cell.styles.fontStyle="bold"; h.cell.styles.textColor=ch[h.row.index].t==="mieux"?PDFC.green:PDFC.iso; } }});
     P(`${ev.length-ch.length} élèves stables (comparaison sur toutes les questions ensemble).`,9,PDFC.muted); }
+  if(kind==="complet"){
   /* ---- 4. carte ---- */
   H2(sec++,"La carte de la classe");
   const g=graphSVG(all,allE,new Map(),v=>LIGHT[v]||"#1d2a2e",null);
@@ -1172,11 +1306,14 @@ async function buildPdf(){
   const rq=result.qLabels.map((l,i)=>({l,i})).filter(x=>/aide|confi|parles|ne va pas/.test(norm(x.l)));
   table({head:[["Groupes d'amis (liens réciproques dans au moins 2 questions)"]],body:grps.length?grps.map((gg,i)=>[T(`Groupe ${i+1} : ${gg.map(s=>s.name).join(", ")}`)]):[[T("Aucun groupe solide.")]]});
   table({head:[["Question","Élèves vers qui les autres se tournent (3 choix ou plus)"]],body:(rq.length?rq:result.qLabels.map((l,i)=>({l,i}))).map(({l,i})=>{ const top=[...compute(String(i)).st.values()].filter(x=>x.recu>=3).sort((a,b)=>b.recu-a.recu).slice(0,5); return [l,top.length?top.map(x=>`${x.name} (${x.recu})`).join(", "):"Personne"].map(T); }),columnStyles:{0:{cellWidth:70}}});
+  }
   /* ---- 6. groupes de travail ---- */
   H2(sec++,"Groupes de travail proposés");
   P(`Groupes de ${$("#wgSize").value} élèves environ : chacun est placé, si possible, avec au moins un camarade qu'il a choisi ou qui l'a choisi. * = sans lien avec les autres membres.`,9,PDFC.muted);
   const wg=workGroups(+$("#wgSize").value);
   table({head:[["Groupe","Élèves"]],body:wg.map((gg,i)=>[`Groupe ${i+1}`,gg.map(m=>m.name+(m.seul?" *":"")).join(", ")].map(T)),columnStyles:{0:{cellWidth:24,fontStyle:"bold"}}});
+  if(kind==="titu") P("Ces groupes s'appuient sur les affinités que les élèves ont déclarées. Ils peuvent servir pour un travail de groupe, un placement en classe ou une sortie. N'indique jamais aux élèves d'où viennent ces groupes.",9,PDFC.muted);
+  if(kind==="complet"){
   /* ---- 7. détail ---- */
   H2(sec++,"Détail par élève");
   const rows=A.slice().sort((a,b)=>a.recu-b.recu||a.name.localeCompare(b.name,"fr"));
@@ -1184,28 +1321,31 @@ async function buildPdf(){
     body:rows.map(x=>[x.name+(x.repondu?"":" (pas répondu)"),CAT[x.cat][0],String(x.recu),String(x.mut),`${x.isoQ} / ${x.qn} questions`,x.repondu?`${x.aucunQ} / ${x.qn}`:"-"].map(T)),
     columnStyles:{0:{fontStyle:"bold",cellWidth:42}},
     didParseCell:h=>{ if(h.section==="body"&&h.column.index===1){ const c=rows[h.row.index].cat; h.cell.styles.textColor=c==="iso"?PDFC.iso:c==="peu"?PDFC.peu:c==="star"?PDFC.plum:PDFC.green; h.cell.styles.fontStyle="bold"; } }});
+  }
   /* ---- pied de page ---- */
   const n=doc.getNumberOfPages(), gen=new Date().toLocaleDateString("fr-BE");
   for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8); color(PDFC.muted);
-    doc.text(T(`Sociogramme · Classe ${d.base||d.classe} · Confidentiel · généré le ${gen}`),M,290); doc.text(`${i} / ${n}`,W-M,290,{align:"right"}); }
+    doc.text(T(`Sociogramme · Classe ${d.base||d.classe} · Rapport ${KD.court} · Confidentiel · généré le ${gen}`),M,290); doc.text(`${i} / ${n}`,W-M,290,{align:"right"}); }
   return doc.output("blob");
 }
 $("#pdfBtn").onclick=async()=>{
   const b=$("#pdfBtn");
-  const name=("sociogramme-"+(CUR.base||CUR.classe)+"-"+String(CUR.date||"").replace(/\//g,"-")).replace(/[^\w.-]+/g,"_")+".pdf";
+  const kind=$("#pdfKind").value;
+  const name=("sociogramme-"+(CUR.base||CUR.classe)+"-"+KINDS[kind].court+"-"+String(CUR.date||"").replace(/\//g,"-")).replace(/[^\w.-]+/g,"_")+".pdf";
   if(PDFBLOB){ const r=await shareFile(PDFBLOB,name,"Rapport sociogramme"); $("#pdfMsg").textContent=r==="ok"?"Rapport enregistré.":r==="cancel"?"":"Le rapport n'a pas pu être enregistré."; return; }
   b.disabled=true; b.textContent="Préparation du rapport…"; $("#pdfMsg").textContent="";
-  try{ PDFBLOB=await buildPdf(); b.textContent="Enregistrer le PDF"; $("#pdfMsg").textContent="Rapport prêt. Touche « Enregistrer le PDF » pour le ranger dans OneDrive ou Fichiers."; }
+  try{ PDFBLOB=await buildPdf(kind); b.textContent="Enregistrer le PDF"; $("#pdfMsg").textContent="Rapport prêt. Touche « Enregistrer le PDF » pour le ranger dans OneDrive ou Fichiers."; }
   catch(e){ b.textContent="Rapport PDF"; $("#pdfMsg").textContent="Le rapport n'a pas pu être créé. Vérifie que l'iPad est connecté à internet, puis réessaie."; }
   b.disabled=false;
 };
+$("#pdfKind").onchange=()=>{ PDFBLOB=null; $("#pdfBtn").textContent="Rapport PDF"; $("#pdfMsg").textContent=""; };
 if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
 
 /* ---------- garder les données : stockage persistant + sauvegarde dans un fichier ---------- */
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
-const BK_KEYS=[K.code,K.ar,K.lives,K.q,K.qopen,K.educ,K.ec];
+const BK_KEYS=[K.code,K.codes,K.ar,K.lives,K.q,K.qopen,K.educ,K.suivi,K.ec];
 /* partage un fichier : feuille de partage de l'iPad (OneDrive, Fichiers, Mail…), sinon téléchargement */
 async function shareFile(blob,name,title){
   const file=new File([blob],name,{type:blob.type});
@@ -1236,7 +1376,7 @@ $("#bkFile").addEventListener("change",e=>{
   }; rd.readAsText(f);
 });
 /* mise à jour automatique : à l'ouverture (et au retour sur l'accueil), on regarde si une nouvelle version est en ligne */
-const APP_VERSION="2026-10-15d";
+const APP_VERSION="2026-10-15f";
 async function checkUpdate(){
   try{
     if(location.protocol!=="https:") return;
@@ -1252,7 +1392,7 @@ async function checkUpdate(){
 }
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&!$("#vHome").hidden) checkUpdate(); });
 /* au démarrage : écran d'accueil (ou séance en cours) */
-window.__socio={openResults,DEMO_DATA,DEMO_PREV,show,buildPdf:()=>buildPdf(),workGroups:s=>workGroups(s)};
+window.__socio={openResults,DEMO_DATA,DEMO_PREV,show,buildPdf:k=>buildPdf(k),workGroups:s=>workGroups(s)};
 renderHome();
 checkUpdate();
 })();
