@@ -159,11 +159,13 @@ label{font-weight:700;font-size:14px}
 .b-iso{background:var(--iso-soft);color:var(--iso)} .b-peu{background:var(--peu-soft);color:var(--peu)}
 .b-ok{background:var(--ok-soft);color:var(--ok)} .b-star{background:var(--star-soft);color:var(--star)}
 .b-nr{background:var(--blue-soft);color:var(--blue)}
+.list .badge{white-space:normal}
 .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .stat{border-radius:14px;padding:12px 14px;display:grid;gap:2px}
 .stat strong{font-family:var(--f-display);font-size:30px;font-variant-numeric:tabular-nums;line-height:1}
 .main{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
-@media (max-width:900px){.main{grid-template-columns:1fr}}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.main>*{min-width:0}
 .graphbox{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;border-radius:16px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
 #graph{width:100%;height:100%;display:block;touch-action:none}
 .node text{font-family:var(--f-body);font-size:12px;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:3px;pointer-events:none}
@@ -180,7 +182,7 @@ tbody tr{cursor:pointer}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:2px 10px}
 .note{font-size:13px;color:var(--muted);border-left:3px solid var(--green);padding-left:10px}
-.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;align-items:start}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:20px;align-items:start}
 .grp{border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:grid;gap:6px}
 .ftable{font-size:13px}.ftable td,.ftable th{padding:5px 6px}
 .example{font-size:13px;font-weight:700;color:var(--peu)}
@@ -188,6 +190,25 @@ tbody tr{cursor:pointer}
 #oops{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9999;background:var(--peu-soft);color:var(--ink);border:1px solid var(--peu);border-radius:14px;padding:12px 14px;font-size:15px;display:flex;gap:12px;align-items:flex-start}
 #oops b{display:block;margin-bottom:2px}
 #oops button{margin-left:auto;flex:none;min-height:36px;padding:6px 12px}
+.speak{min-height:44px;padding:8px 12px;border-radius:12px;background:var(--qs,var(--green-soft));color:var(--qc,var(--green));border:0}
+.speak svg{width:22px;height:22px}
+textarea.msg{font:inherit;font-size:18px;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:14px;width:100%;min-height:150px;resize:vertical}
+textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
+.overlay{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--ink) 45%,transparent);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-left,0px))}
+.overlay .card{max-width:380px;width:100%;justify-items:center;text-align:center}
+.pad.small{grid-template-columns:repeat(3,68px);gap:10px}
+.pad.small button{min-height:62px;font-size:24px}
+.pad.small button.fn{font-size:14px}
+.missing{font-size:14px;color:var(--ink)}
+.sev{display:inline-flex;align-items:center;font-size:12px;font-weight:700;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.sev-1{background:var(--iso);color:var(--on-accent)} .sev-2{background:var(--iso-soft);color:var(--iso)} .sev-3{background:var(--peu-soft);color:var(--peu)}
+.crit{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.crit:last-child{border-bottom:0}
+.quote{border-left:3px solid var(--plum);padding:6px 12px;background:var(--plum-soft);border-radius:0 10px 10px 0;white-space:pre-wrap}
+.evo-up{color:var(--ok);font-weight:700} .evo-down{color:var(--iso);font-weight:700}
+.wg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr));gap:10px}
+.chip.warn{border-color:var(--peu);color:var(--peu)}
+.resbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -238,7 +259,7 @@ tbody tr{cursor:pointer}
         <ol class="steps">
           <li><span>Choisis la classe et lance la séance.</span></li>
           <li><span>Fais passer l'iPad : chaque élève touche son nom puis répond. Compte 2 minutes par élève.</span></li>
-          <li><span>Pour sortir, maintiens le bouton <b>Adulte</b> appuyé. La classe reste « en cours » sur l'accueil, même si un élève est absent : tu la reprends plus tard. Quand tout le monde est passé, termine la séance.</span></li>
+          <li><span>Pour sortir, touche <b>Adulte</b> et tape le code éducateur. La classe reste « en cours » sur l'accueil, même si un élève est absent : tu la reprends plus tard. Quand tout le monde est passé, termine la séance.</span></li>
           <li><span>Les réponses partent à l'abri. Tu ne peux pas les voir, et les élèves non plus.</span></li>
         </ol>
       </section>
@@ -262,6 +283,16 @@ tbody tr{cursor:pointer}
         <button class="quiet hold" id="kAdult" title="Maintenir appuyé">Adulte</button></div>
     </div>
     <div id="kBody" style="display:grid;gap:18px"></div>
+    <div class="overlay" id="adultPad" hidden>
+      <div class="card">
+        <h3>Code éducateur</h3>
+        <p class="small muted">Pour quitter la séance, tape le code à 4 chiffres.</p>
+        <div class="dots" id="aDots"></div>
+        <p class="err small" id="aErr" aria-live="assertive"></p>
+        <div class="pad small" id="aPad"></div>
+        <button class="quiet" id="aCancel">Annuler</button>
+      </div>
+    </div>
     <div class="knav" id="kNav">
       <button class="ghost big" id="kBack"><svg class="i"><use href="#i-back"/></svg>Retour</button>
       <button class="big" id="kNext">Question suivante<svg class="i"><use href="#i-next"/></svg></button>
@@ -279,7 +310,6 @@ tbody tr{cursor:pointer}
       <div class="pad" id="pad"></div>
       <div class="row" style="justify-content:center">
         <button class="quiet" id="lockCancel">Retour à l'accueil</button>
-        <button class="quiet" id="lockDemo">Voir un exemple fictif</button>
       </div>
       <div id="forgot" style="display:grid;gap:8px;justify-items:center">
         <button class="quiet" id="forgotBtn">Code oublié ?</button>
@@ -296,6 +326,7 @@ tbody tr{cursor:pointer}
       <div style="display:grid;gap:4px"><span class="eyebrow">Espace référent · déverrouillé</span><h1>Les réponses des classes</h1></div>
       <button class="ghost" id="refLock"><svg class="i"><use href="#i-lock"/></svg>Verrouiller</button>
     </div>
+    <div id="bkWarn" class="notice warn" hidden><svg class="i"><use href="#i-info"/></svg><div style="display:grid;gap:8px"><span id="bkWarnTxt"></span><div><button class="ghost" id="bkWarnBtn">Sauvegarder maintenant</button></div></div></div>
     <div class="refgrid">
       <section class="card" aria-labelledby="t-coll">
         <h2 id="t-coll">Séances</h2>
@@ -311,8 +342,15 @@ tbody tr{cursor:pointer}
         <section class="card" aria-labelledby="t-q">
           <h3 id="t-q">Les 5 questions</h3>
           <div id="qEdit" style="display:grid;gap:10px"></div>
+          <label class="row" style="gap:10px;font-weight:400;align-items:flex-start"><input type="checkbox" id="qOpen" style="width:22px;height:22px;margin-top:2px"> <span>Ajouter à la fin : « Y a-t-il quelque chose que tu voudrais dire à un adulte ? » (facultatif pour l'élève, chiffré comme le reste)</span></label>
           <div class="row"><button class="ghost" id="qSave">Enregistrer les questions</button><span id="qMsg" class="small muted"></span></div>
           <p class="small muted">Vide une case pour retirer une question. Les séances déjà faites gardent leurs questions.</p>
+        </section>
+        <section class="card" aria-labelledby="t-educ">
+          <h3 id="t-educ">Code de l'éducateur</h3>
+          <p class="small muted" id="educInfo"></p>
+          <div class="row"><div class="field" style="flex:0 1 160px"><label for="educCode">Nouveau code (4 chiffres)</label><input type="text" id="educCode" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div><button class="ghost" id="educSave">Enregistrer</button></div>
+          <p class="small muted" id="educMsg" aria-live="polite"></p>
         </section>
         <section class="card" aria-labelledby="t-bk">
           <h3 id="t-bk">Sauvegarde</h3>
@@ -329,9 +367,17 @@ tbody tr{cursor:pointer}
     <div class="row" style="justify-content:space-between;align-items:end">
       <div style="display:grid;gap:4px"><button class="quiet" id="resBack" style="justify-self:start"><svg class="i"><use href="#i-back"/></svg>Toutes les séances</button>
         <h1 id="resTitle"></h1><span id="srcLabel" class="example"></span></div>
-      <div class="field" style="flex:0 1 340px"><label for="view">Afficher</label><select id="view"></select></div>
+      <div class="resbar">
+        <div class="field" style="flex:0 1 300px"><label for="view">Afficher</label><select id="view"></select></div>
+        <div class="field" style="flex:0 1 240px" id="cmpBox" hidden><label for="cmp">Comparer avec</label><select id="cmp"></select></div>
+        <button id="pdfBtn">Rapport PDF</button>
+      </div>
     </div>
+    <p id="pdfMsg" class="small muted" aria-live="polite"></p>
+    <section class="card" id="critCard" aria-labelledby="t-crit"></section>
+    <section class="card" id="msgCard" aria-labelledby="t-msg" hidden></section>
     <div class="summary" id="summary"></div>
+    <section class="card" id="evolCard" hidden></section>
     <div class="main">
       <div style="display:grid;gap:10px;min-width:0">
         <div class="graphbox"><svg id="graph" role="img" aria-label="Carte des choix entre élèves"></svg></div>
@@ -352,6 +398,12 @@ tbody tr{cursor:pointer}
       <div class="list" id="groups"></div>
       <div class="list" id="ress"></div>
     </div>
+    <section class="card" id="wgCard" aria-labelledby="t-wg">
+      <div class="row" style="justify-content:space-between"><h3 id="t-wg">Groupes de travail proposés</h3>
+        <div class="row"><label for="wgSize" class="small">Élèves par groupe</label><select id="wgSize" style="width:auto"><option>3</option><option selected>4</option><option>5</option></select><button class="ghost" id="wgCopy">Copier</button><span id="wgMsg" class="small muted"></span></div></div>
+      <p class="small muted">Chaque élève est placé, si possible, avec au moins un camarade qu'il a choisi ou qui l'a choisi. Les élèves isolés sont placés en premier, près de ceux vers qui ils vont.</p>
+      <div class="wg" id="wgList"></div>
+    </section>
     <div class="tablewrap"><table id="table"></table></div>
   </main>
 </div>
@@ -395,7 +447,7 @@ const QDEF=["Avec qui aimes-tu travailler en classe ?","À qui demandes-tu de l'
 const NB=2;
 
 /* ---------- stockage local (tout reste sur cet iPad) ---------- */
-const K={ec:"sociogramme-eleves",live:"sociogramme-collecte",lives:"sociogramme-seances",ar:"sociogramme-archives",code:"sociogramme-code",q:"sociogramme-questions"};
+const K={ec:"sociogramme-eleves",live:"sociogramme-collecte",lives:"sociogramme-seances",ar:"sociogramme-archives",code:"sociogramme-code",q:"sociogramme-questions",educ:"sociogramme-code-educ",qopen:"sociogramme-question-ouverte",bk:"sociogramme-derniere-sauvegarde"};
 const get=(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } };
 const put=(k,v,what)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); return true; }catch(e){ oups(what||"Enregistrement impossible.","L’iPad n’arrive pas à garder les données (navigation privée ou mémoire pleine). Préviens M. Ahkim avant de continuer."); return false; } };
 const del=k=>{ try{ localStorage.removeItem(k); }catch(e){} };
@@ -467,6 +519,7 @@ function renderHome(msg){
   lc.innerHTML=LIVES.map(L=>{ const n=L.done.length, t=L.eleves.length;
     return `<div class="card live"><div class="row" style="justify-content:space-between"><h3>${esc(L.classe)} · en cours</h3><span class="pill p-live">${n} / ${t} élèves</span></div>
       <div class="meter"><i style="width:${Math.round(n/t*100)}%"></i></div>
+      ${n<t?`<p class="missing"><b>Pas encore passés (${t-n}) :</b> ${L.eleves.filter(x=>!L.done.includes(x)).map(esc).join(", ")}</p>`:`<p class="missing"><b>Toute la classe est passée.</b> Tu peux terminer la séance.</p>`}
       <div class="row"><button class="big" data-resume="${L.id}"><svg class="i"><use href="#i-play"/></svg>Reprendre</button><button class="ghost" data-end="${L.id}">Terminer la séance</button></div></div>`; }).join("");
   lc.querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>{ LIVE=LIVES.find(x=>String(x.id)===b.dataset.resume); if(LIVE) openKiosk(); });
   lc.querySelectorAll("[data-end]").forEach(b=>b.onclick=()=>{ LIVE=LIVES.find(x=>String(x.id)===b.dataset.end); if(LIVE) askEnd(); });
@@ -477,7 +530,7 @@ $("#hClasse").onchange=()=>{ $("#hStart").disabled=!$("#hClasse").value; };
 $("#hStart").onclick=async()=>{
   const c=$("#hClasse").value; if(!c||!ECOLE) return;
   if(!(await pubKey())){ renderHome(); return; }
-  LIVE={id:Date.now(),classe:c,eleves:ECOLE.classes[c].slice(),q:questions(),done:[],rows:[],debut:new Date().toLocaleDateString("fr-BE")};
+  LIVE={id:Date.now(),classe:c,eleves:ECOLE.classes[c].slice(),q:questions(),open:get(K.qopen,true)!==false,done:[],rows:[],debut:new Date().toLocaleDateString("fr-BE")};
   LIVES.push(LIVE); if(saveLives()) openKiosk(); else { LIVES.pop(); LIVE=null; }
 };
 const _hDemo=()=>{ LIVE_DEMO={demo:true,classe:"1X exemple",eleves:DEMO.eleves.slice(),q:QDEF.slice(),done:[],rows:[]}; openKiosk(true); };
@@ -494,6 +547,10 @@ $("#endYes").onclick=()=>{
   if(!put(K.ar,ar,"Séance non terminée.")) return;
   const c=LIVE.classe, n=LIVE.done.length; LIVES=LIVES.filter(x=>x!==LIVE); saveLives(); LIVE=null;
   renderHome(`Séance ${c} terminée : ${n} réponse${n>1?"s":""} mise${n>1?"s":""} à l'abri. Seul le référent numérique peut les lire.`);
+  /* sauvegarde automatique : la feuille de partage s'ouvre tout de suite (OneDrive, Fichiers…) */
+  shareBackup(true).then(r=>{ const m=$("#homeMsg span"); if(!m) return;
+    if(r==="ok") m.textContent+=" Sauvegarde enregistrée.";
+    else if(r==="cancel") m.textContent+=" Sauvegarde non enregistrée : le référent pourra la faire depuis son espace."; });
 };
 $("#toRef").onclick=()=>{ PRIV?openRef():openLock(); };
 
@@ -507,7 +564,8 @@ function kRender(){
   const qc=COLORS[(K_.step<0?0:qi)%4]; $("#vKiosk").style.setProperty("--qc",`var(${qc})`); $("#vKiosk").style.setProperty("--qs",`var(${qc}-soft)`);
   $("#kClasse").textContent=L.demo?"Exemple · réponses non gardées":L.classe;
   $("#kCount").textContent=`${L.done.length} / ${L.eleves.length} ont répondu`;
-  $("#kLeaves").innerHTML=L.q.map((_,i)=>`<i class="${K_.step>i||K_.step==="merci"?"done":K_.step===i?"now":""}"></i>`).join("");
+  const sn=typeof K_.step==="number"?K_.step:(K_.step==="msg"||K_.step==="merci"?99:-1);
+  $("#kLeaves").innerHTML=L.q.map((_,i)=>`<i class="${sn>i?"done":sn===i?"now":""}"></i>`).join("");
   if(K_.step==="merci"){
     nav.hidden=true;
     body.innerHTML=`<div class="thanks"><div class="bloom">${COLORS.concat("--green").map(c=>`<i style="--c:var(${c})"></i>`).join("")}</div>
@@ -522,12 +580,27 @@ function kRender(){
     body.querySelectorAll(".kname").forEach(b=>b.onclick=()=>{ K_={who:b.dataset.n,step:"hello",picks:L.q.map(()=>[]),none:L.q.map(()=>false)}; kRender(); });
     $("#kBack").hidden=true; $("#kNext").hidden=true; return;
   }
+  if(K_.step==="msg"){
+    body.innerHTML=`<div class="qhead"><div class="qicon"><svg viewBox="0 0 24 24">${ICONS.confier}</svg></div>
+        <div style="display:grid;gap:4px"><span class="eyebrow" style="color:var(--qc)">Dernière question, si tu veux</span><h2>Y a-t-il quelque chose que tu voudrais dire à un adulte de l'école ?</h2></div></div>
+      <div class="row">${speakBtn("Dernière question, si tu veux. Y a-t-il quelque chose que tu voudrais dire à un adulte de l'école ? Tu peux écrire ici, ou toucher : je n'ai rien à dire.")}</div>
+      <textarea class="msg" id="kMsg" maxlength="600" placeholder="Écris ici, si tu veux…">${esc(K_.msg||"")}</textarea>
+      <div class="secret"><svg class="i" style="color:var(--green)"><use href="#i-shield"/></svg><span>Seul le référent numérique lira ton message. S'il y a un danger pour toi ou pour quelqu'un, il préviendra un adulte qui peut aider.</span></div>
+      <div><button class="ghost big" id="kNothing">Je n'ai rien à dire</button></div>`;
+    $("#kMsg").oninput=e=>{ K_.msg=e.target.value; };
+    $("#kNothing").onclick=()=>{ K_.msg=""; submitAnswers(); };
+    bindSpeak(body);
+    $("#kBack").hidden=false; $("#kNext").hidden=false; $("#kNext").disabled=false;
+    $("#kNext").innerHTML=`Envoyer mes réponses<svg class="i"><use href="#i-check"/></svg>`; return;
+  }
   if(K_.step==="hello"){
     body.innerHTML=`<div class="welcome">${leaf(K_.who,L.eleves.indexOf(K_.who))}
       <h1>Bonjour ${esc(K_.who.split(" ")[0])} !</h1>
       <p class="hint">Tu vas répondre à <b>${L.q.length} petites questions</b>. Pour chacune, choisis <b>1 ou 2 camarades</b> de ta classe, ou « Personne ».</p>
       <div class="secret"><svg class="i" style="color:var(--green)"><use href="#i-shield"/></svg><span>Tes réponses sont <b>secrètes</b>. Personne de la classe ne les verra, ni l'éducateur. Réponds simplement ce que tu ressens.</span></div>
+      ${speakBtn(`Bonjour ${K_.who.split(" ")[0]} ! Tu vas répondre à ${L.q.length} petites questions. Pour chacune, choisis un ou deux camarades de ta classe, ou personne. Tes réponses sont secrètes.`)}
       <p class="small muted">Ce n'est pas toi ? Touche Retour.</p></div>`;
+    bindSpeak(body);
     $("#kBack").hidden=false; $("#kNext").hidden=false; $("#kNext").disabled=false;
     $("#kNext").innerHTML=`C'est parti<svg class="i"><use href="#i-next"/></svg>`; return;
   }
@@ -536,7 +609,7 @@ function kRender(){
   const hint=none?"Tu as choisi <b>Personne</b>. Touche-le à nouveau pour changer.":p.length===0?`Choisis <b>1 ou 2</b> camarades, ou « Personne ».`:full?`Tu as choisi <b>2 camarades</b>. Touche un nom pour le retirer.`:`Tu peux en choisir <b>1 de plus</b>, ou passer à la suite.`;
   body.innerHTML=`<div class="qhead"><div class="qicon"><svg viewBox="0 0 24 24">${iconFor(L.q[qi])}</svg></div>
       <div style="display:grid;gap:4px"><span class="eyebrow" style="color:var(--qc)">Question ${qi+1} sur ${L.q.length}</span><h2>${esc(L.q[qi])}</h2></div></div>
-    <p class="hint">${hint}</p>
+    <div class="row" style="justify-content:space-between"><p class="hint">${hint}</p>${speakBtn(L.q[qi]+" Choisis un ou deux camarades, ou personne.")}</div>
     <div class="kgrid">${L.eleves.filter(n=>n!==K_.who).map(n=>{ const on=p.includes(n);
       return `<button class="kname${full&&!on?" dim":""}" data-n="${esc(n)}" aria-pressed="${on}">${leaf(n,idx.get(n))}<span class="nm">${esc(n)}</span><svg class="i tick"><use href="#i-check"/></svg></button>`; }).join("")}
       <button class="kname none" data-none="1" aria-pressed="${none}"><span class="nm">Personne</span><svg class="i tick"><use href="#i-check"/></svg></button></div>`;
@@ -544,31 +617,56 @@ function kRender(){
     if(b.dataset.none){ K_.none[qi]=!none; p.length=0; kRender(); return; }
     const n=b.dataset.n, k=p.indexOf(n); K_.none[qi]=false;
     if(k>=0) p.splice(k,1); else if(p.length<NB) p.push(n); kRender(); });
+  bindSpeak(body);
   $("#kBack").hidden=false; $("#kNext").hidden=false;
   $("#kNext").disabled=!(p.length||none);
-  $("#kNext").innerHTML=qi===L.q.length-1?`Envoyer mes réponses<svg class="i"><use href="#i-check"/></svg>`:`Question suivante<svg class="i"><use href="#i-next"/></svg>`;
+  $("#kNext").innerHTML=qi===L.q.length-1&&!L.open?`Envoyer mes réponses<svg class="i"><use href="#i-check"/></svg>`:`Question suivante<svg class="i"><use href="#i-next"/></svg>`;
 }
-$("#kBack").onclick=()=>{ if(K_.step==="hello") K_={who:null,step:-1}; else if(K_.step===0) K_.step="hello"; else K_.step--; kRender(); };
+$("#kBack").onclick=()=>{ stopSpeak(); if(K_.step==="hello") K_={who:null,step:-1}; else if(K_.step==="msg") K_.step=cur().q.length-1; else if(K_.step===0) K_.step="hello"; else K_.step--; kRender(); };
 $("#kNext").onclick=async()=>{
-  const L=cur();
+  const L=cur(); stopSpeak();
   if(K_.step==="hello"){ K_.step=0; kRender(); return; }
-  if(K_.step<L.q.length-1){ K_.step++; kRender(); return; }
+  if(typeof K_.step==="number"&&K_.step<L.q.length-1){ K_.step++; kRender(); return; }
+  if(typeof K_.step==="number"&&L.open){ K_.step="msg"; kRender(); return; }
+  submitAnswers();
+};
+async function submitAnswers(){
+  const L=cur();
   $("#kNext").disabled=true;
+  const msg=String(K_.msg||"").trim().slice(0,600);
   if(!L.demo){
-    try{ L.rows.push(await seal({who:K_.who,picks:K_.picks})); }
+    try{ L.rows.push(await seal(msg?{who:K_.who,picks:K_.picks,msg}:{who:K_.who,picks:K_.picks})); }
     catch(e){ oups("Réponse non enregistrée.","Le chiffrement n'a pas fonctionné. Préviens M. Ahkim."); $("#kNext").disabled=false; return; }
     L.done.push(K_.who);
     if(!saveLives("Réponse non enregistrée.")){ L.rows.pop(); L.done.pop(); $("#kNext").disabled=false; return; }
   } else L.done.push(K_.who);
   K_.step="merci"; kRender();
   setTimeout(()=>{ if(K_&&K_.step==="merci"&&!$("#vKiosk").hidden){ K_={who:null,step:-1}; kRender(); } },3500);
-};
-/* bouton Adulte : maintenir 1,5 s pour sortir (les élèves ne sortent pas par erreur) */
+}
+/* lecture à voix haute (voix française de l'iPad) */
+const canSpeak=!!(window.speechSynthesis&&window.SpeechSynthesisUtterance);
+function speakBtn(text){ return canSpeak?`<button class="speak" type="button" data-say="${esc(text)}" aria-label="Écouter"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg>Écouter</button>`:""; }
+function bindSpeak(root){ root.querySelectorAll("[data-say]").forEach(b=>b.onclick=()=>{ try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(b.dataset.say); u.lang="fr-FR"; u.rate=.92;
+  const v=speechSynthesis.getVoices().find(v=>/^fr(-|_)/i.test(v.lang)); if(v) u.voice=v; speechSynthesis.speak(u); }catch(e){} }); }
+function stopSpeak(){ try{ if(canSpeak) speechSynthesis.cancel(); }catch(e){} }
+/* bouton Adulte : avec un code éducateur s'il existe, sinon maintenir 1,5 s */
+const leaveKiosk=()=>{ stopSpeak(); if(LIVE_DEMO){ LIVE_DEMO=null; renderHome(); } else askEnd(); };
+async function hashEduc(code,salt){ const h=await S.digest("SHA-256",enc.encode(salt+":"+code)); return b64(h); }
+let aPIN="";
+function drawAPad(){ $("#aDots").innerHTML=Array.from({length:4},(_,i)=>`<i class="${i<aPIN.length?"on":""}"></i>`).join("");
+  $("#aPad").innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button data-d="${n}">${n}</button>`).join("")+`<button class="fn" data-x="c">Effacer</button><button data-d="0">0</button><button class="fn" data-x="b" aria-label="Retirer un chiffre">⌫</button>`;
+  $("#aPad").querySelectorAll("button").forEach(b=>b.onclick=async()=>{ const d=b.dataset.d,x=b.dataset.x;
+    if(x==="c") aPIN=""; else if(x==="b") aPIN=aPIN.slice(0,-1); else if(aPIN.length<4) aPIN+=d;
+    $("#aErr").textContent=""; drawAPad();
+    if(aPIN.length===4){ const e=get(K.educ,null); const ok=e&&(await hashEduc(aPIN,e.salt))===e.hash; aPIN="";
+      if(ok){ $("#adultPad").hidden=true; leaveKiosk(); } else { $("#aErr").textContent="Code incorrect."; const dd=$("#aDots"); dd.classList.remove("shake"); void dd.offsetWidth; dd.classList.add("shake"); drawAPad(); } } }); }
+$("#aCancel").onclick=()=>{ aPIN=""; $("#adultPad").hidden=true; };
 (function(){ const b=$("#kAdult"); let t=null;
   const stop=()=>{ clearTimeout(t); b.classList.remove("pressing"); };
-  b.addEventListener("pointerdown",e=>{ e.preventDefault(); b.classList.add("pressing"); t=setTimeout(()=>{ stop(); if(LIVE_DEMO){ LIVE_DEMO=null; renderHome(); } else askEnd(); },1500); });
+  b.addEventListener("click",()=>{ if(get(K.educ,null)&&!LIVE_DEMO){ aPIN=""; drawAPad(); $("#aErr").textContent=""; $("#adultPad").hidden=false; } });
+  b.addEventListener("pointerdown",e=>{ if(get(K.educ,null)&&!LIVE_DEMO) return; e.preventDefault(); b.classList.add("pressing"); t=setTimeout(()=>{ stop(); leaveKiosk(); },1500); });
   ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,stop));
-  b.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); if(LIVE_DEMO){LIVE_DEMO=null;renderHome();} else askEnd(); } });
+  b.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&!get(K.educ,null)){ e.preventDefault(); leaveKiosk(); } });
 })();
 
 /* ============ VERROU ============ */
@@ -610,11 +708,10 @@ async function submitPin(){
     fail(n>=5?"Code incorrect. Attends une minute avant de réessayer.":"Code incorrect."); }
 }
 $("#lockCancel").onclick=()=>renderHome();
-$("#lockDemo").onclick=()=>openResults(DEMO_DATA,true);
 $("#forgotBtn").onclick=()=>{ $("#forgotBox").hidden=!$("#forgotBox").hidden; };
 $("#forgotWipe").onclick=function(){
   if(!this.classList.contains("armed")){ this.classList.add("armed"); this.textContent="Confirmer : tout effacer"; return; }
-  [K.code,K.ar,K.live,K.lives,"sociogramme-essais"].forEach(del); LIVES=[]; LIVE=null; PUB=null; PRIV=null; openLock();
+  [K.code,K.ar,K.live,K.lives,K.educ,"sociogramme-essais"].forEach(del); LIVES=[]; LIVE=null; PUB=null; PRIV=null; openLock();
 };
 /* verrouillage automatique : quand l'iPad se met en veille ou après 10 minutes sans toucher */
 function lockNow(){ PRIV=null; if(!$("#vRef").hidden||(!$("#vRes").hidden&&!resDemo)) renderHome(); }
@@ -633,22 +730,23 @@ function renderRef(){
       <div class="acts"><span class="pill ${x.live?"p-live":"p-done"}">${x.live?"En cours":"Terminée"}</span>
         <button class="ghost" data-open="${x.live?"live:"+x.id:x.i}" ${x.n?"":"disabled"}>Voir les résultats</button>
         ${x.live?"":`<button class="danger" data-del="${x.i}">Supprimer</button>`}</div></div>`).join("")
-    :`<div class="notice"><svg class="i"><use href="#i-info"/></svg><span>Aucune séance pour l'instant. Quand l'éducateur termine une séance, elle apparaît ici.</span></div>`)+
-    `<div class="row"><button class="quiet" id="refDemo">Voir un exemple fictif</button></div>`;
-  $("#refDemo").onclick=()=>openResults(DEMO_DATA,true);
+    :`<div class="notice"><svg class="i"><use href="#i-info"/></svg><span>Aucune séance pour l'instant. Quand l'éducateur termine une séance, elle apparaît ici.</span></div>`);
   $("#collList").querySelectorAll("[data-open]").forEach(b=>b.onclick=async()=>{
-    const o=b.dataset.open; const Lv=o.startsWith("live:")?LIVES.find(x=>"live:"+x.id===o):null;
-    const src=Lv?{classe:Lv.classe,q:Lv.q,eleves:Lv.eleves,rows:Lv.rows,live:true}:get(K.ar,[])[+o];
-    b.disabled=true; b.textContent="Déchiffrement…";
-    try{ const rows=[]; for(const s of src.rows) rows.push(await unseal(s,PRIV));
-      openResults({classe:src.classe+(src.live?" (en cours)":""),date:src.date,q:src.q,eleves:src.eleves,rows},false);
-    }catch(e){ oups("Lecture impossible.","Ces réponses n'ont pas pu être déchiffrées avec ce code."); renderRef(); }
+    const o=b.dataset.open; b.disabled=true; b.textContent="Déchiffrement…";
+    try{ openResults(await loadSession(o),false); }
+    catch(e){ oups("Lecture impossible.","Ces réponses n'ont pas pu être déchiffrées avec ce code."); renderRef(); }
   });
   $("#collList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
     if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Confirmer"; return; }
     const a=get(K.ar,[]); a.splice(+b.dataset.del,1); put(K.ar,a); renderRef(); });
   showEcole(); renderQEdit();
-  const last=get("sociogramme-derniere-sauvegarde",0);
+  const last=get(K.bk,0), jours=last?Math.floor((Date.now()-last)/86400000):null;
+  const besoin=(ar.length||LIVES.length)&&(!last||jours>=7);
+  $("#bkWarn").hidden=!besoin;
+  $("#bkWarnTxt").textContent=!last?"Aucune sauvegarde n'a encore été faite. Si l'iPad est réinitialisé, toutes les réponses seront perdues.":`Dernière sauvegarde il y a ${jours} jours. Fais-en une nouvelle pour ne rien perdre.`;
+  const e=get(K.educ,null);
+  $("#educInfo").textContent=e?"Un code éducateur est enregistré : il est demandé quand on touche « Adulte » pendant la séance. Donne-le seulement à l'éducateur.":"Pas encore de code : pour sortir de la séance, il faut maintenir « Adulte » appuyé. Un code à 4 chiffres est plus sûr.";
+  $("#qOpen").checked=get(K.qopen,true)!==false;
   $("#bkInfo").textContent=(last?`Dernière sauvegarde : ${new Date(last).toLocaleDateString("fr-BE")}. `:"Aucune sauvegarde pour l'instant. ")+"Garde une copie de tout (ton code, les séances, la liste) dans un fichier. Les réponses y restent chiffrées.";
 }
 function showEcole(){
@@ -661,7 +759,19 @@ $("#ecoleClear").onclick=function(){ if(!this.classList.contains("armed")){ this
 function renderQEdit(){ const q=questions(); $("#qEdit").innerHTML=[0,1,2,3,4].map(i=>`<div class="field"><label for="q${i}">Question ${i+1}</label><input type="text" id="q${i}" value="${esc(q[i]||"")}"></div>`).join(""); $("#qMsg").textContent=""; }
 $("#qSave").onclick=()=>{ const q=[0,1,2,3,4].map(i=>$("#q"+i).value.trim()).filter(Boolean);
   if(!q.length){ $("#qMsg").textContent="Garde au moins une question."; return; }
-  if(put(K.q,q)) $("#qMsg").textContent="Questions enregistrées pour les prochaines séances."; };
+  if(put(K.q,q)&&put(K.qopen,$("#qOpen").checked)) $("#qMsg").textContent="Questions enregistrées pour les prochaines séances."; };
+$("#educSave").onclick=async()=>{ const v=$("#educCode").value.trim();
+  if(!/^\d{4}$/.test(v)){ $("#educMsg").textContent="Le code doit avoir exactement 4 chiffres."; return; }
+  const salt=b64(crypto.getRandomValues(new Uint8Array(12)));
+  if(put(K.educ,{salt,hash:await hashEduc(v,salt)})){ $("#educCode").value=""; $("#educMsg").textContent="Code éducateur enregistré. Donne-le à l'éducateur."; renderRef(); } };
+$("#bkWarnBtn").onclick=()=>{ shareBackup(false).then(r=>{ if(r==="ok") renderRef(); }); };
+/* charge une séance (en cours ou terminée) et déchiffre ses réponses */
+async function loadSession(o){
+  const Lv=String(o).startsWith("live:")?LIVES.find(x=>"live:"+x.id===o):null;
+  const ar=get(K.ar,[]); const src=Lv?{...Lv,live:true}:ar[+o];
+  const rows=[]; for(const s of src.rows) rows.push(await unseal(s,PRIV));
+  return {key:String(o),id:src.id,base:src.classe,classe:src.classe+(src.live?" (en cours)":""),date:src.live?src.debut:src.date,q:src.q,eleves:src.eleves,rows};
+}
 
 /* lecture du fichier des élèves (.csv sans bibliothèque, .xlsx avec SheetJS) */
 function parseCSV(txt){
@@ -723,23 +833,49 @@ const DEMO={eleves:["Adam E.","Amina B.","Chaïma L.","Hamza B.","Ilyes T.","Lin
   ["Chaïma L.","Sara M.;Lina K.","Sara M.;Nora D.","Nora D.;Sara M.","Nora D.;Sara M.","Nora D.;Sara M."],
   ["Hamza B.","Yanis R.;Ilyes T.","Ilyes T.;Sara M.","Mehdi O.;Yanis R.","Mehdi O.;Yanis R.","Mehdi O.;Yanis R."],
   ["Sofia A.","Chaïma L.","Sara M.","Chaïma L.","(personne)","Chaïma L.;Nora D."]]};
-const DEMO_DATA={classe:"1X · classe exemple",q:QDEF,eleves:DEMO.eleves,rows:DEMO.rows.map(r=>({who:r[0],picks:r.slice(1).map(c=>c.split(";").filter(x=>x!=="(personne)"))}))};
-let result=null, selected=null, sim=null, resDemo=false;
-function openResults(d,demo){
-  resDemo=demo;
-  $("#resTitle").textContent=d.classe; $("#srcLabel").textContent=demo?"Exemple fictif : aucun vrai élève":(d.date?"Séance du "+d.date:"");
-  $("#resBack").innerHTML=`<svg class="i"><use href="#i-back"/></svg>${demo&&!PRIV?"Retour":"Toutes les séances"}`;
+const toRows=rows=>rows.map(r=>({who:r[0],picks:r.slice(1).map(c=>c.split(";").filter(x=>x!=="(personne)"))}));
+const DEMO_DATA={key:"demo",base:"1X",classe:"1X · classe exemple",date:"15/10/2026",q:QDEF,eleves:DEMO.eleves,rows:toRows(DEMO.rows)};
+DEMO_DATA.rows.find(r=>r.who==="Sofia A.").msg="Je me sens seule à la récré, personne ne veut jouer avec moi.";
+DEMO_DATA.rows.find(r=>r.who==="Hamza B.").msg="Ça va mieux depuis que je suis assis à côté de Mehdi.";
+const DEMO_PREV={key:"demo-prev",base:"1X",classe:"1X · classe exemple",date:"12/03/2026",q:QDEF,eleves:DEMO.eleves,rows:toRows(DEMO.rows.map(r=>{
+  const x=r.slice(); if(x[0]==="Nora D.") x[5]="Chaïma L.;Sara M.";
+  if(x[0]==="Sara M.") x[3]="Chaïma L.;Amina B.";
+  if(x[0]==="Ilyes T.") x[1]="Mehdi O.;Yanis R.";
+  if(x[0]==="Hamza B.") x[3]="Yanis R.;Adam E.";
+  if(x[0]==="Rayan S.") x[1]="Mehdi O.;Ilyes T.";
+  return x; }))};
+let result=null, selected=null, sim=null, resDemo=false, CUR=null, CMP=null, PDFBLOB=null;
+function buildResult(d){
   const names=new Map(); const add=n=>{const k=norm(n); if(k&&!names.has(k)) names.set(k,String(n).trim()); return k;};
   d.eleves.forEach(add);
-  const respondents=new Set(), votes=[], aucun=d.q.map(()=>new Set());
+  const respondents=new Set(), votes=[], aucun=d.q.map(()=>new Set()), msgs=new Map();
   d.rows.forEach(r=>{ const from=add(r.who); if(!from) return; respondents.add(from);
+    if(r.msg&&String(r.msg).trim()) msgs.set(from,String(r.msg).trim());
     d.q.forEach((_,qi)=>{ const lst=(r.picks[qi]||[]); if(!lst.length) aucun[qi].add(from);
       lst.forEach(n=>{ const to=add(n); if(to&&to!==from) votes.push({from,to,q:qi}); }); }); });
-  result={names,respondents,votes,qLabels:d.q,aucun};
+  return {names,respondents,votes,qLabels:d.q,aucun,msgs};
+}
+function openResults(d,demo){
+  resDemo=demo; CUR=d; CMP=null; PDFBLOB=null;
+  $("#resTitle").textContent=d.classe; $("#srcLabel").textContent=demo?"Exemple fictif : aucun vrai élève":(d.date?"Séance du "+d.date:"");
+  $("#resBack").innerHTML=`<svg class="i"><use href="#i-back"/></svg>${demo&&!PRIV?"Retour":"Toutes les séances"}`;
+  $("#pdfBtn").textContent="Rapport PDF"; $("#pdfMsg").textContent="";
+  result=buildResult(d);
+  /* séances de la même classe pour comparer */
+  let opts=[];
+  if(demo) opts=[{v:"demo-prev",t:"Séance du 12/03/2026 (exemple)"}];
+  else get(K.ar,[]).forEach((a,i)=>{ if(a.classe===d.base&&String(i)!==d.key) opts.push({v:String(i),t:"Séance du "+a.date}); });
+  $("#cmpBox").hidden=!opts.length;
+  $("#cmp").innerHTML='<option value="">Aucune comparaison</option>'+opts.map(o=>`<option value="${o.v}">${esc(o.t)}</option>`).join("");
   $("#view").innerHTML=`<option value="all">${d.q.length>1?"Toutes les questions ensemble":"Les réponses"}</option>`+d.q.map((l,i)=>`<option value="${i}">${esc(l)}</option>`).join("");
   selected=null; sim=null; show("vRes"); render();
 }
-$("#resBack").onclick=()=>{ result=null; if(PRIV) openRef(); else openLock(); };
+$("#resBack").onclick=()=>{ result=null; CMP=null; if(PRIV) openRef(); else openLock(); };
+$("#cmp").onchange=async()=>{ const v=$("#cmp").value; PDFBLOB=null; $("#pdfBtn").textContent="Rapport PDF";
+  if(!v){ CMP=null; render(); return; }
+  try{ const d2=v==="demo-prev"?DEMO_PREV:await loadSession(v); CMP={date:d2.date,res:buildResult(d2)}; render(); }
+  catch(e){ CMP=null; oups("Comparaison impossible.","Cette séance n'a pas pu être déchiffrée."); } };
+$("#wgSize").onchange=()=>{ PDFBLOB=null; $("#pdfBtn").textContent="Rapport PDF"; renderWG(); };
 function groupsOf(st){
   const parent=new Map([...st.keys()].map(k=>[k,k]));
   const f=k=>{ while(parent.get(k)!==k){ parent.set(k,parent.get(parent.get(k))); k=parent.get(k);} return k; };
@@ -747,8 +883,8 @@ function groupsOf(st){
   const g=new Map(); st.forEach(s=>{ if(!s.mutuels.size) return; const r=f(s.k); if(!g.has(r)) g.set(r,[]); g.get(r).push(s); });
   return [...g.values()].filter(x=>x.length>=2).sort((a,b)=>b.length-a.length);
 }
-function compute(view){
-  const {names,respondents,votes}=result; if(view===undefined) view=$("#view").value;
+function compute(view,res){
+  const {names,respondents,votes}=res||result; if(view===undefined) view=$("#view").value;
   const vs=view==="all"?votes:votes.filter(x=>x.q===+view);
   const st=new Map([...names.keys()].map(k=>[k,{k,name:names.get(k),recu:0,par:new Set(),choisis:new Set(),mutuels:new Set(),repondu:respondents.has(k)}]));
   const pair=new Set();
@@ -765,8 +901,100 @@ function compute(view){
   return {st,edges};
 }
 const CAT={iso:["Isolé","b-iso","--iso"],peu:["Peu choisi","b-peu","--peu"],ok:["Bien intégré","b-ok","--ok"],star:["Très choisi","b-star","--star"]};
+/* ----- analyse par élève : signaux, niveau de priorité ----- */
+const PISTES={1:"En parler cette semaine au titulaire et au centre PMS. Observer la récréation, prévoir un entretien discret.",
+  2:"Entretien individuel discret avec l'éducateur. En travail de groupe, le placer avec un camarade qu'il a choisi.",
+  3:"Garder un œil. Proposer des activités en binôme avec un élève vers qui il va.",
+  4:"Lui faire passer le questionnaire à son retour."};
+const NIVEAUX={1:"Priorité",2:"À suivre",3:"À surveiller",4:"Info"};
+function analyseEleves(res){
+  res=res||result; const Q=res.qLabels, qn=Q.length;
+  const perQ=Q.map((_,i)=>compute(String(i),res).st), all=compute("all",res).st;
+  const ci=Q.findIndex(l=>/ne va pas|confi|parles/.test(norm(l)));
+  return [...all.values()].map(s=>{
+    const isoQ=perQ.filter(st=>st.get(s.k).recu===0).length;
+    const aucunQ=Q.filter((_,i)=>res.aucun[i].has(s.k)).length;
+    const msg=res.msgs.get(s.k)||"", sig=[]; let lvl=9;
+    const up=l=>{ lvl=Math.min(lvl,l); };
+    if(!s.repondu){ sig.push("N'a pas répondu (absent ?)"); up(4); }
+    if(s.recu===0){ sig.push(`Personne ne l'a choisi, dans aucune des ${qn} questions`); up(1); }
+    else if(qn>1&&isoQ>=Math.ceil(qn/2)){ sig.push(`Choisi par personne dans ${isoQ} questions sur ${qn}`); up(2); }
+    if(ci>=0&&s.repondu&&res.aucun[ci].has(s.k)){ sig.push("Dit n'avoir personne à qui parler quand ça ne va pas"); up(s.recu<=1?1:2); }
+    if(s.recu>0&&s.mutuels.size===0){ sig.push("Aucun choix réciproque : ceux qu'il choisit ne le choisissent pas"); up(3); }
+    if(s.repondu&&aucunQ>=2){ sig.push(`N'a choisi personne dans ${aucunQ} questions`); up(3); }
+    if(msg){ sig.push("A laissé un message (voir « Messages des élèves »)"); up(2); }
+    return {k:s.k,name:s.name,recu:s.recu,mut:s.mutuels.size,cat:s.cat,repondu:s.repondu,isoQ,aucunQ,qn,msg,sig,lvl};
+  });
+}
+function evolution(){
+  if(!CMP) return null;
+  const now=new Map(analyseEleves().map(x=>[x.k,x])), avant=new Map(analyseEleves(CMP.res).map(x=>[x.k,x]));
+  const rows=[];
+  now.forEach((n,k)=>{ const a=avant.get(k); if(!a||!a.repondu&&!n.repondu) return;
+    const d=n.recu-a.recu; let t="stable";
+    if((a.cat==="iso"||a.cat==="peu")&&(n.cat==="ok"||n.cat==="star")||d>=2) t="mieux";
+    if((a.cat==="ok"||a.cat==="star")&&(n.cat==="iso"||n.cat==="peu")||d<=-2) t="moins";
+    rows.push({k,name:n.name,avant:a.recu,maint:n.recu,cA:a.cat,cN:n.cat,d,t}); });
+  return rows.sort((x,y)=>({moins:0,mieux:1,stable:2}[x.t]-{moins:0,mieux:1,stable:2}[y.t])||x.d-y.d||x.name.localeCompare(y.name,"fr"));
+}
+function priorites(){
+  const ev=evolution(); const A=analyseEleves();
+  if(ev) ev.forEach(e=>{ if(e.t==="moins"){ const a=A.find(x=>x.k===e.k); a.sig.push(`Moins choisi qu'à la séance du ${CMP.date} (${e.avant} → ${e.maint} choix)`); a.lvl=Math.min(a.lvl,e.cN==="iso"?1:2); } });
+  return A.filter(a=>a.lvl<=4).sort((a,b)=>a.lvl-b.lvl||a.recu-b.recu||a.name.localeCompare(b.name,"fr"));
+}
+/* ----- groupes de travail : chacun avec au moins un camarade choisi, les isolés d'abord ----- */
+function workGroups(size){
+  const keys=[...result.names.keys()], n=keys.length; if(!n) return [];
+  const ti=result.qLabels.findIndex(l=>/travail/.test(norm(l)));
+  const A=new Map(keys.map(k=>[k,new Map()]));
+  result.votes.forEach(v=>{ const w=v.q===ti?2:1; [[v.from,v.to],[v.to,v.from]].forEach(([a,b])=>A.get(a).set(b,(A.get(a).get(b)||0)+w)); });
+  const aff=(a,b)=>A.get(a).get(b)||0;
+  const G=Math.max(1,Math.round(n/size)), cap=Array.from({length:G},(_,i)=>Math.floor(n/G)+(i<n%G?1:0));
+  const groups=Array.from({length:G},()=>[]);
+  const tot=k=>[...A.get(k).values()].reduce((a,b)=>a+b,0);
+  const recu=new Map(keys.map(k=>[k,0])); result.votes.forEach(v=>recu.set(v.to,recu.get(v.to)+1));
+  const order=keys.slice().sort((a,b)=>recu.get(a)-recu.get(b)||tot(a)-tot(b));
+  order.forEach(k=>{ let best=-1,bs=-1e9; groups.forEach((g,i)=>{ if(g.length>=cap[i]) return;
+    const sc=g.reduce((t,m)=>t+aff(k,m),0)*10-g.length; if(sc>bs){bs=sc;best=i;} }); groups[best].push(k); });
+  const score=()=>groups.reduce((t,g)=>t+g.reduce((u,a)=>u+g.reduce((v,b)=>v+(a<b?aff(a,b):0),0)+(g.some(b=>b!==a&&aff(a,b)>0)?6:0),0),0);
+  let seed=7, cur=score(); const rnd=m=>{ seed=(seed*1103515245+12345)%2147483648; return seed%m; };
+  for(let it=0;it<1500&&G>1;it++){ const g1=rnd(G), g2=rnd(G); if(g1===g2) continue;
+    const i=rnd(groups[g1].length), j=rnd(groups[g2].length); const a=groups[g1][i], b=groups[g2][j];
+    groups[g1][i]=b; groups[g2][j]=a; const sc=score(); if(sc>=cur) cur=sc; else { groups[g1][i]=a; groups[g2][j]=b; } }
+  return groups.map(g=>g.map(k=>({k,name:result.names.get(k),seul:!g.some(b=>b!==k&&aff(k,b)>0)})).sort((a,b)=>a.name.localeCompare(b.name,"fr")));
+}
+function renderWG(){
+  const gs=workGroups(+$("#wgSize").value);
+  $("#wgList").innerHTML=gs.map((g,i)=>`<div class="grp"><strong>Groupe ${i+1}</strong><div class="chips">${g.map(m=>`<span class="chip${m.seul?" warn":""}" ${m.seul?'title="Aucun lien avec les autres membres"':""}>${esc(m.name)}</span>`).join("")}</div></div>`).join("")+
+    (gs.some(g=>g.some(m=>m.seul))?`<p class="small muted" style="grid-column:1/-1">En orange : élève sans lien avec les autres membres du groupe (personne ne l'a choisi et il n'a choisi personne parmi eux).</p>`:"");
+  $("#wgCopy").onclick=()=>{ const txt=gs.map((g,i)=>`Groupe ${i+1} : ${g.map(m=>m.name).join(", ")}`).join("\n");
+    const ok=()=>{$("#wgMsg").textContent="Groupes copiés.";}, ko=()=>{$("#wgMsg").textContent="Copie impossible ici.";};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok).catch(ko); else ko(); };
+}
 function render(){
   if(!result||$("#vRes").hidden) return;
+  /* cas à traiter en priorité (toutes questions confondues) */
+  const P=priorites().filter(x=>x.lvl<=3), abs=priorites().filter(x=>x.lvl===4);
+  $("#critCard").innerHTML=`<div class="row" style="justify-content:space-between"><h2 id="t-crit">À traiter en priorité</h2><span class="small muted">Toutes les questions ensemble</span></div>`+
+    (P.length?`<div>${P.map(x=>`<div class="crit"><span class="sev sev-${x.lvl}">${NIVEAUX[x.lvl]}</span><div style="display:grid;gap:2px;min-width:0"><button class="quiet" data-sel="${esc(x.k)}" style="justify-self:start;min-height:0;padding:0;border:0;font-size:16px;color:var(--ink)">${esc(x.name)}</button>
+      <span class="small">${x.sig.map(esc).join(" · ")}</span><span class="small muted">Piste : ${esc(PISTES[x.lvl])}</span></div></div>`).join("")}</div>`
+      :`<p class="muted">Aucun cas préoccupant dans cette séance.</p>`)+
+    (abs.length?`<p class="small muted">Pas répondu : ${abs.map(x=>esc(x.name)).join(", ")}. ${esc(PISTES[4])}</p>`:"");
+  $("#critCard").querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>{ selected=b.dataset.sel; render(); $("#fiche").scrollIntoView({block:"center"}); });
+  /* messages de la question ouverte */
+  const M=[...result.msgs.entries()];
+  $("#msgCard").hidden=!M.length;
+  $("#msgCard").innerHTML=`<h2 id="t-msg">Messages des élèves</h2><p class="small muted">À lire avec attention. Si un message signale un danger ou du harcèlement, suis la procédure de l'école (direction, centre PMS).</p>`+
+    M.map(([k,m])=>`<div style="display:grid;gap:4px"><strong>${esc(result.names.get(k))}</strong><div class="quote">${esc(m)}</div></div>`).join("");
+  /* évolution depuis une autre séance */
+  const ev=evolution();
+  $("#evolCard").hidden=!ev;
+  if(ev){ const mieux=ev.filter(e=>e.t==="mieux"), moins=ev.filter(e=>e.t==="moins");
+    $("#evolCard").innerHTML=`<h2>Évolution depuis la séance du ${esc(CMP.date)}</h2>
+      <div class="cols2"><div class="list"><h3 class="evo-down">Moins bien intégrés (${moins.length})</h3>${moins.length?moins.map(e=>`<div>${esc(e.name)} : ${e.avant} → ${e.maint} choix reçus · ${CAT[e.cA][0]} → <span class="badge ${CAT[e.cN][1]}">${CAT[e.cN][0]}</span></div>`).join(""):'<p class="muted">Personne.</p>'}</div>
+      <div class="list"><h3 class="evo-up">Mieux intégrés (${mieux.length})</h3>${mieux.length?mieux.map(e=>`<div>${esc(e.name)} : ${e.avant} → ${e.maint} choix reçus · ${CAT[e.cA][0]} → <span class="badge ${CAT[e.cN][1]}">${CAT[e.cN][0]}</span></div>`).join(""):'<p class="muted">Personne.</p>'}</div></div>
+      <p class="small muted">${ev.length-mieux.length-moins.length} élèves stables. Comparaison sur toutes les questions ensemble.</p>`; }
+  renderWG();
   const {st,edges}=compute(); const all=[...st.values()];
   const c=k=>all.filter(s=>s.cat===k).length; const nr=all.filter(s=>!s.repondu).length;
   $("#summary").innerHTML=[
@@ -783,6 +1011,8 @@ function render(){
   const iso=all.filter(s=>s.cat==="iso"), sansMut=all.filter(s=>s.cat!=="iso"&&s.mutuels.size===0);
   $("#alerts").innerHTML=`<h3>À surveiller</h3>`+
     (iso.length?`<p><span class="badge b-iso">Personne ne les a choisis</span></p><div class="chips">${iso.map(s=>`<span class="chip">${esc(s.name)}</span>`).join("")}</div>`:`<p class="muted">Aucun élève isolé pour cette question.</p>`)+
+    ($("#view").value==="all"&&result.qLabels.length>1?(()=>{ const r=analyseEleves().filter(x=>x.isoQ>=2&&x.recu>0).sort((a,b)=>b.isoQ-a.isoQ);
+      return r.length?`<p><span class="badge b-peu">Choisis par personne dans plusieurs questions</span></p><div class="chips">${r.map(x=>`<span class="chip">${esc(x.name)} · ${x.isoQ}/${x.qn}</span>`).join("")}</div>`:""; })():"")+
     (sansMut.length?`<p><span class="badge b-peu">Choisis, mais sans lien réciproque</span></p><div class="chips">${sansMut.map(s=>`<span class="chip">${esc(s.name)}</span>`).join("")}</div>`:"")+
     (()=>{ const v=$("#view").value; const idx=v==="all"?result.qLabels.map((_,i)=>i):[+v];
       return idx.filter(i=>result.aucun[i].size).map(i=>`<p><span class="badge b-nr">N'a choisi personne · ${esc(result.qLabels[i])}</span></p><div class="chips">${[...result.aucun[i]].map(k=>`<span class="chip">${esc(result.names.get(k))}</span>`).join("")}</div>`).join(""); })()+
@@ -829,10 +1059,8 @@ function render(){
   }
   drawGraph(st,edges);
 }
-function drawGraph(st,edges){
-  const svg=$("#graph"); const W=800,H=600; svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
-  const cs=getComputedStyle(document.documentElement); const col=v=>cs.getPropertyValue(v).trim();
-  const prevPos=sim?sim.pos:new Map();
+function layout(st,edges,prevPos){
+  const W=800,H=600;
   const nodes=[...st.values()].map((s,i,a)=>{ const p=prevPos.get(s.k); const ang=i/a.length*Math.PI*2;
     return {s,x:p?p.x:W/2+Math.cos(ang)*220,y:p?p.y:H/2+Math.sin(ang)*180,vx:0,vy:0}; });
   const idx=new Map(nodes.map((n,i)=>[n.s.k,i]));
@@ -846,8 +1074,10 @@ function drawGraph(st,edges){
     const x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
     nodes.forEach(n=>{ n.x=70+(x1>x0?(n.x-x0)/(x1-x0):.5)*(W-140); n.y=40+(y1>y0?(n.y-y0)/(y1-y0):.5)*(H-90); });
   }
-  sim={pos:new Map(nodes.map(n=>[n.s.k,{x:n.x,y:n.y}]))};
-  const sel=selected; const related=new Set();
+  return {nodes,L};
+}
+function graphSVG(st,edges,pos,col,sel){
+  const {nodes,L}=layout(st,edges,pos); const related=new Set();
   if(sel){ related.add(sel); edges.forEach(e=>{ if(e.a===sel) related.add(e.b); if(e.b===sel) related.add(e.a); }); }
   const R=n=>9+Math.min(n.s.recu,8)*1.6;
   let out=`<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="${col("--edge")}"/></marker></defs>`;
@@ -856,28 +1086,150 @@ function drawGraph(st,edges){
     const on=!sel||a.s.k===sel||b.s.k===sel;
     out+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${l.mut?col("--blue"):col("--edge")}" stroke-width="${l.mut?3:1.3}" opacity="${on?(l.mut?.9:.7):.08}" ${l.mut?"":'marker-end="url(#arr)"'}/>`; });
   nodes.forEach(n=>{ const c=col(CAT[n.s.cat][2]); const on=!sel||related.has(n.s.k);
-    out+=`<g class="node" data-k="${esc(n.s.k)}" style="cursor:pointer" opacity="${on?1:.25}"><circle cx="${n.x}" cy="${n.y}" r="${R(n)}" fill="${c}" stroke="${n.s.k===sel?col("--ink"):col("--surface")}" stroke-width="${n.s.k===sel?3:2}" ${n.s.repondu?"":'stroke-dasharray="3 2"'}/><text x="${n.x}" y="${n.y+R(n)+14}" text-anchor="middle">${esc(n.s.name)}</text></g>`; });
-  svg.innerHTML=out;
+    out+=`<g class="node" data-k="${esc(n.s.k)}" style="cursor:pointer" opacity="${on?1:.25}"><circle cx="${n.x}" cy="${n.y}" r="${R(n)}" fill="${c}" stroke="${n.s.k===sel?col("--ink"):col("--surface")}" stroke-width="${n.s.k===sel?3:2}" ${n.s.repondu?"":'stroke-dasharray="3 2"'}/><text x="${n.x}" y="${n.y+R(n)+14}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="${col("--ink")}" stroke="${col("--bg")}" stroke-width="3" paint-order="stroke">${esc(n.s.name)}</text></g>`; });
+  return {svg:out,pos:new Map(nodes.map(n=>[n.s.k,{x:n.x,y:n.y}]))};
+}
+function drawGraph(st,edges){
+  const svg=$("#graph"); const W=800,H=600; svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const cs=getComputedStyle(document.documentElement); const col=v=>cs.getPropertyValue(v).trim();
+  const g=graphSVG(st,edges,sim?sim.pos:new Map(),col,selected); sim={pos:g.pos}; svg.innerHTML=g.svg;
   svg.querySelectorAll(".node").forEach(g=>g.onclick=()=>{selected=selected===g.dataset.k?null:g.dataset.k; render();});
 }
 $("#view").onchange=()=>render();
+/* ===================== RAPPORT PDF ===================== */
+const LIBS=["https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js","https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"];
+const loadScript=src=>new Promise((ok,ko)=>{ if([...document.scripts].some(x=>x.src===src)) return ok(); const x=document.createElement("script"); x.src=src; x.onload=ok; x.onerror=ko; document.head.appendChild(x); });
+const T=t=>String(t??"").replace(/[’‘]/g,"'").replace(/[“”]/g,'"').replace(/…/g,"...").replace(/[–—]/g,"-").replace(/↔/g,"<->").replace(/→/g,"->").replace(/œ/g,"oe").replace(/Œ/g,"OE").replace(/[^\x00-\xFF]/g,"");
+const PDFC={ink:[29,42,46],muted:[86,102,106],line:[212,223,216],green:[27,140,72],blue:[47,110,158],plum:[150,42,104],coral:[207,83,41],iso:[192,57,43],isoS:[251,231,228],peu:[168,109,18],peuS:[251,240,220],okS:[221,240,228],sunk:[233,240,235],bg:[242,246,243]};
+const LIGHT={"--iso":"#c0392b","--peu":"#a86d12","--ok":"#1b8c48","--star":"#962a68","--blue":"#2f6e9e","--edge":"#98a9a1","--ink":"#1d2a2e","--surface":"#ffffff","--bg":"#ffffff"};
+function svgToPng(inner,w,h){ return new Promise((ok,ko)=>{ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${inner}</svg>`;
+  const img=new Image(); img.onload=()=>{ const c=document.createElement("canvas"); c.width=w*2; c.height=h*2; const x=c.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height); ok(c.toDataURL("image/jpeg",.85)); };
+  img.onerror=ko; img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg); }); }
+async function buildPdf(){
+  for(const u of LIBS) await loadScript(u);
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4",compress:true});
+  const W=210, M=16, CW=W-2*M; let y=0;
+  const color=(c,t="text")=>t==="text"?doc.setTextColor(...c):t==="fill"?doc.setFillColor(...c):doc.setDrawColor(...c);
+  const need=h=>{ if(y+h>280){ doc.addPage(); y=20; } };
+  const H2=(n,t)=>{ need(18); y+=4; color(PDFC.green); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text(T(String(n).padStart(2,"0")),M,y);
+    color(PDFC.ink); doc.setFontSize(15); doc.text(T(t),M+8,y); y+=2.5; color(PDFC.line,"draw"); doc.setLineWidth(.3); doc.line(M,y,W-M,y); y+=6; };
+  const P=(t,size=10,c=PDFC.ink,style="normal")=>{ doc.setFont("helvetica",style); doc.setFontSize(size); color(c); const lines=doc.splitTextToSize(T(t),CW); need(lines.length*size*.42+2); doc.text(lines,M,y); y+=lines.length*size*.42+2; };
+  const table=(opts)=>{ doc.autoTable(Object.assign({startY:y,margin:{left:M,right:M,bottom:20},theme:"plain",
+    styles:{font:"helvetica",fontSize:9,textColor:PDFC.ink,cellPadding:{top:2,bottom:2,left:2,right:2},lineColor:PDFC.line,lineWidth:{bottom:.2},valign:"top"},
+    headStyles:{fontStyle:"bold",textColor:PDFC.muted,fontSize:8,fillColor:PDFC.sunk}},opts)); y=doc.lastAutoTable.finalY+6; };
+  const d=CUR, A=analyseEleves(), PR=priorites(), all=compute("all").st, allE=compute("all").edges;
+  const nRep=[...all.values()].filter(s=>s.repondu).length;
+  /* ---- en-tête ---- */
+  color(PDFC.bg,"fill"); doc.rect(0,0,W,52,"F");
+  try{ const logo=document.querySelector(".logo img").src; doc.addImage(logo,"PNG",M,9,28,34); }catch(e){}
+  color(PDFC.green); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text(T("RAPPORT SOCIOGRAMME · CONFIDENTIEL"),M+36,16);
+  color(PDFC.ink); doc.setFontSize(24); doc.text(T("Classe "+(d.base||d.classe)),M+36,27);
+  doc.setFont("helvetica","normal"); doc.setFontSize(11); color(PDFC.muted);
+  doc.text(T(`Séance du ${d.date||"-"} · ${nRep} élèves sur ${all.size} ont répondu`),M+36,35);
+  doc.text(T("Institut La Vertu · Réservé à l'équipe éducative et au centre PMS"),M+36,41);
+  y=62;
+  /* ---- chiffres clés ---- */
+  const allArr=[...all.values()];
+  const tiles=[["Élèves",all.size,PDFC.sunk,PDFC.blue],["Priorités",PR.filter(x=>x.lvl===1).length,PDFC.isoS,PDFC.iso],["À suivre",PR.filter(x=>x.lvl===2).length,PDFC.peuS,PDFC.peu],["Isolés",allArr.filter(s=>s.cat==="iso").length,PDFC.isoS,PDFC.iso],["Liens réciproques",allE.filter(e=>e.mut).length,PDFC.okS,PDFC.green]];
+  const tw=(CW-4*4)/5; tiles.forEach((t,i)=>{ const x=M+i*(tw+4); color(t[2],"fill"); doc.roundedRect(x,y,tw,20,2,2,"F");
+    color(t[3]); doc.setFont("helvetica","bold"); doc.setFontSize(18); doc.text(String(t[1]),x+4,y+10); doc.setFontSize(8); doc.setFont("helvetica","normal"); color(PDFC.ink); doc.text(T(t[0]),x+4,y+16); });
+  y+=28;
+  /* ---- 1. priorités ---- */
+  let sec=1;
+  H2(sec++,"À traiter en priorité");
+  const crit=PR.filter(x=>x.lvl<=3);
+  if(crit.length){
+    table({head:[["Niveau","Élève","Ce que montrent les réponses","Piste d'action"]],
+      body:crit.map(x=>[NIVEAUX[x.lvl],x.name,x.sig.join("\n"),PISTES[x.lvl]].map(T)),
+      columnStyles:{0:{cellWidth:22,fontStyle:"bold"},1:{cellWidth:30,fontStyle:"bold"},2:{cellWidth:70},3:{cellWidth:56,textColor:PDFC.muted}},
+      didParseCell:h=>{ if(h.section==="body"&&h.column.index===0){ const l=crit[h.row.index].lvl; h.cell.styles.textColor=l===1?[255,255,255]:l===2?PDFC.iso:PDFC.peu; h.cell.styles.fillColor=l===1?PDFC.iso:l===2?PDFC.isoS:PDFC.peuS; } }});
+  } else P("Aucun cas préoccupant dans cette séance.",10,PDFC.muted);
+  const abs=PR.filter(x=>x.lvl===4); if(abs.length) P(`Pas répondu : ${abs.map(x=>x.name).join(", ")}. ${PISTES[4]}`,9,PDFC.muted);
+  /* ---- 2. messages ---- */
+  const MS=[...result.msgs.entries()];
+  if(MS.length){ H2(sec++,"Messages des élèves");
+    P("À lire avec attention. Si un message signale un danger ou du harcèlement, suivre la procédure de l'école (direction, centre PMS).",9,PDFC.muted);
+    table({head:[["Élève","Message"]],body:MS.map(([k,m])=>[result.names.get(k),m].map(T)),columnStyles:{0:{cellWidth:34,fontStyle:"bold"},1:{fontStyle:"italic"}}}); }
+  /* ---- 3. évolution ---- */
+  const ev=evolution();
+  if(ev){ H2(sec++,`Évolution depuis la séance du ${CMP.date}`);
+    const ch=ev.filter(e=>e.t!=="stable");
+    if(ch.length) table({head:[["Élève","Avant","Maintenant","Évolution"]],body:ch.map(e=>[e.name,`${CAT[e.cA][0]} (${e.avant} choix)`,`${CAT[e.cN][0]} (${e.maint} choix)`,e.t==="mieux"?"Mieux intégré":"Moins bien intégré"].map(T)),
+      didParseCell:h=>{ if(h.section==="body"&&h.column.index===3){ h.cell.styles.fontStyle="bold"; h.cell.styles.textColor=ch[h.row.index].t==="mieux"?PDFC.green:PDFC.iso; } }});
+    P(`${ev.length-ch.length} élèves stables (comparaison sur toutes les questions ensemble).`,9,PDFC.muted); }
+  /* ---- 4. carte ---- */
+  H2(sec++,"La carte de la classe");
+  const g=graphSVG(all,allE,new Map(),v=>LIGHT[v]||"#1d2a2e",null);
+  try{ const png=await svgToPng(g.svg,800,600); need(132); doc.addImage(png,"JPEG",M,y,CW,CW*.75); y+=CW*.75+3; }catch(e){ P("(La carte n'a pas pu être dessinée sur cet appareil.)",9,PDFC.muted); }
+  const leg=[["Isolé (0 choix)",PDFC.iso],["Peu choisi (1)",PDFC.peu],["Bien intégré",PDFC.green],["Très choisi",PDFC.plum]]; let lx=M; doc.setFontSize(8);
+  leg.forEach(([t,c])=>{ color(c,"fill"); doc.circle(lx+1.5,y-1,1.5,"F"); color(PDFC.muted); doc.text(T(t),lx+4.5,y); lx+=doc.getTextWidth(T(t))+11; });
+  y+=5; color(PDFC.muted); doc.text(T("Trait bleu épais : choix réciproque · Flèche grise : choix dans un seul sens · Cercle pointillé : pas répondu"),M,y); y+=8;
+  /* ---- 5. groupes d'amis et élèves ressources ---- */
+  H2(sec++,"Groupes d'amis et élèves ressources");
+  const cnt=new Map(); result.qLabels.forEach((_,i)=>compute(String(i)).st.forEach(x=>x.mutuels.forEach(t=>{ const kk=x.k+"|"+t; cnt.set(kk,(cnt.get(kk)||0)+1); })));
+  const gst=new Map([...all].map(([k,x])=>[k,{...x,mutuels:new Set([...x.mutuels].filter(t=>(cnt.get(k+"|"+t)||0)>=(result.qLabels.length>1?2:1)))}]));
+  const grps=groupsOf(gst);
+  const rq=result.qLabels.map((l,i)=>({l,i})).filter(x=>/aide|confi|parles|ne va pas/.test(norm(x.l)));
+  table({head:[["Groupes d'amis (liens réciproques dans au moins 2 questions)"]],body:grps.length?grps.map((gg,i)=>[T(`Groupe ${i+1} : ${gg.map(s=>s.name).join(", ")}`)]):[[T("Aucun groupe solide.")]]});
+  table({head:[["Question","Élèves vers qui les autres se tournent (3 choix ou plus)"]],body:(rq.length?rq:result.qLabels.map((l,i)=>({l,i}))).map(({l,i})=>{ const top=[...compute(String(i)).st.values()].filter(x=>x.recu>=3).sort((a,b)=>b.recu-a.recu).slice(0,5); return [l,top.length?top.map(x=>`${x.name} (${x.recu})`).join(", "):"Personne"].map(T); }),columnStyles:{0:{cellWidth:70}}});
+  /* ---- 6. groupes de travail ---- */
+  H2(sec++,"Groupes de travail proposés");
+  P(`Groupes de ${$("#wgSize").value} élèves environ : chacun est placé, si possible, avec au moins un camarade qu'il a choisi ou qui l'a choisi. * = sans lien avec les autres membres.`,9,PDFC.muted);
+  const wg=workGroups(+$("#wgSize").value);
+  table({head:[["Groupe","Élèves"]],body:wg.map((gg,i)=>[`Groupe ${i+1}`,gg.map(m=>m.name+(m.seul?" *":"")).join(", ")].map(T)),columnStyles:{0:{cellWidth:24,fontStyle:"bold"}}});
+  /* ---- 7. détail ---- */
+  H2(sec++,"Détail par élève");
+  const rows=A.slice().sort((a,b)=>a.recu-b.recu||a.name.localeCompare(b.name,"fr"));
+  table({head:[["Élève","Situation","Choisi par","Réciproques","Choisi par personne","A choisi personne"]],
+    body:rows.map(x=>[x.name+(x.repondu?"":" (pas répondu)"),CAT[x.cat][0],String(x.recu),String(x.mut),`${x.isoQ} / ${x.qn} questions`,x.repondu?`${x.aucunQ} / ${x.qn}`:"-"].map(T)),
+    columnStyles:{0:{fontStyle:"bold",cellWidth:42}},
+    didParseCell:h=>{ if(h.section==="body"&&h.column.index===1){ const c=rows[h.row.index].cat; h.cell.styles.textColor=c==="iso"?PDFC.iso:c==="peu"?PDFC.peu:c==="star"?PDFC.plum:PDFC.green; h.cell.styles.fontStyle="bold"; } }});
+  /* ---- comment lire ---- */
+  H2(sec++,"Comment lire ce rapport");
+  P(`Chaque élève a répondu sur l'iPad à ${result.qLabels.length} questions en choisissant 0, 1 ou 2 camarades : ${result.qLabels.join(" / ")}`,9,PDFC.muted);
+  P("Un sociogramme est une photo à un moment donné. Il ne dit pas pourquoi un élève est peu choisi : croise toujours ces résultats avec ce que l'équipe observe en classe et à la récréation avant de tirer des conclusions.",9,PDFC.muted);
+  P("Ce document contient des informations sensibles sur des mineurs : ne le partage qu'avec les personnes qui accompagnent la classe (titulaire, éducateur, direction, centre PMS) et ne le montre jamais aux élèves.",9,PDFC.iso,"bold");
+  /* ---- pied de page ---- */
+  const n=doc.getNumberOfPages(), gen=new Date().toLocaleDateString("fr-BE");
+  for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8); color(PDFC.muted);
+    doc.text(T(`Sociogramme · Classe ${d.base||d.classe} · Confidentiel · généré le ${gen}`),M,290); doc.text(`${i} / ${n}`,W-M,290,{align:"right"}); }
+  return doc.output("blob");
+}
+$("#pdfBtn").onclick=async()=>{
+  const b=$("#pdfBtn");
+  const name=("sociogramme-"+(CUR.base||CUR.classe)+"-"+String(CUR.date||"").replace(/\//g,"-")).replace(/[^\w.-]+/g,"_")+".pdf";
+  if(PDFBLOB){ const r=await shareFile(PDFBLOB,name,"Rapport sociogramme"); $("#pdfMsg").textContent=r==="ok"?"Rapport enregistré.":r==="cancel"?"":"Le rapport n'a pas pu être enregistré."; return; }
+  b.disabled=true; b.textContent="Préparation du rapport…"; $("#pdfMsg").textContent="";
+  try{ PDFBLOB=await buildPdf(); b.textContent="Enregistrer le PDF"; $("#pdfMsg").textContent="Rapport prêt. Touche « Enregistrer le PDF » pour le ranger dans OneDrive ou Fichiers."; }
+  catch(e){ b.textContent="Rapport PDF"; $("#pdfMsg").textContent="Le rapport n'a pas pu être créé. Vérifie que l'iPad est connecté à internet, puis réessaie."; }
+  b.disabled=false;
+};
 if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",render);
 new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 
 
 /* ---------- garder les données : stockage persistant + sauvegarde dans un fichier ---------- */
 try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
-const BK_KEYS=[K.code,K.ar,K.lives,K.q,K.ec];
-$("#bkSave").onclick=()=>{
-  const data={app:"sociogramme-la-vertu",v:1,date:new Date().toISOString()};
-  BK_KEYS.forEach(k=>{ const v=get(k,null); if(v!==null) data[k]=v; });
+const BK_KEYS=[K.code,K.ar,K.lives,K.q,K.qopen,K.educ,K.ec];
+/* partage un fichier : feuille de partage de l'iPad (OneDrive, Fichiers, Mail…), sinon téléchargement */
+async function shareFile(blob,name,title){
+  const file=new File([blob],name,{type:blob.type});
+  try{ if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title}); return "ok"; } }
+  catch(e){ if(e&&e.name==="AbortError") return "cancel"; }
+  try{ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000); return "ok"; }catch(e){ return "fail"; }
+}
+/* auto = après une séance : sans la liste des élèves (seules des données chiffrées et les noms de classes) */
+function shareBackup(auto){
+  const data={app:"sociogramme-la-vertu",v:2,date:new Date().toISOString()};
+  BK_KEYS.forEach(k=>{ if(auto&&k===K.ec) return; const v=get(k,null); if(v!==null) data[k]=v; });
   const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="sauvegarde-sociogramme-"+new Date().toISOString().slice(0,10)+".json";
-  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
-  put("sociogramme-derniere-sauvegarde",Date.now());
-  $("#bkMsg").textContent="Sauvegarde téléchargée. Range le fichier dans OneDrive ou dans l'app Fichiers.";
-};
+  const name="sauvegarde-sociogramme-"+new Date().toISOString().slice(0,10)+".json";
+  return shareFile(blob,name,"Sauvegarde Sociogramme").then(r=>{ if(r==="ok") put(K.bk,Date.now()); return r; });
+}
+$("#bkSave").onclick=()=>{ shareBackup(false).then(r=>{
+  $("#bkMsg").textContent=r==="ok"?"Sauvegarde enregistrée. Range-la dans OneDrive pour la retrouver si besoin.":r==="cancel"?"Sauvegarde annulée.":"La sauvegarde n'a pas pu être créée sur cet appareil.";
+  if(r==="ok") renderRef(); }); };
 $("#bkFile").addEventListener("change",e=>{
   const f=e.target.files[0]; e.target.value=""; if(!f) return;
   const rd=new FileReader(); rd.onload=()=>{
@@ -889,7 +1241,7 @@ $("#bkFile").addEventListener("change",e=>{
   }; rd.readAsText(f);
 });
 /* au démarrage : écran d'accueil (ou séance en cours) */
-window.__socio={openResults,DEMO_DATA,show,openKiosk:()=>{}};
+window.__socio={openResults,DEMO_DATA,DEMO_PREV,show,buildPdf:()=>buildPdf(),workGroups:s=>workGroups(s)};
 renderHome();
 })();
 </script>
