@@ -510,6 +510,7 @@ async function addAccess(nom,pin){
   const ct=await S.encrypt({name:"AES-GCM",iv},await wrapKey(pin,salt),PRIV_RAW);
   const L=get(K.codes,[])||[]; L.push({id:Date.now().toString(36),nom,date:new Date().toISOString(),salt:b64(salt),iv:b64(iv),priv:b64(ct)});
   if(!put(K.codes,L,"Accès non enregistré.")) throw new Error("save");
+  put("sociogramme-modif",Date.now());
 }
 let PUB=null;
 async function pubKey(){ if(PUB) return PUB; const c=get(K.code,null); if(!c) return null;
@@ -583,6 +584,7 @@ $("#endNo").onclick=()=>renderHome();
 $("#endYes").onclick=()=>{
   const ar=get(K.ar,[]); ar.unshift({id:LIVE.id,classe:LIVE.classe,date:new Date().toLocaleDateString("fr-BE"),q:LIVE.q,eleves:LIVE.eleves,rows:LIVE.rows});
   if(!put(K.ar,ar,"Séance non terminée.")) return;
+  put("sociogramme-modif",Date.now());
   const c=LIVE.classe, n=LIVE.done.length; LIVES=LIVES.filter(x=>x!==LIVE); saveLives(); LIVE=null;
   renderHome(`Séance ${c} terminée : ${n} réponse${n>1?"s":""} mise${n>1?"s":""} à l'abri. Seul le référent numérique peut les lire.`);
   /* sauvegarde automatique : la feuille de partage s'ouvre tout de suite (OneDrive, Fichiers…) */
@@ -779,9 +781,10 @@ function renderRef(){
     const a=get(K.ar,[]); a.splice(+b.dataset.del,1); put(K.ar,a); renderRef(); });
   showEcole(); renderQEdit();
   const last=get(K.bk,0), jours=last?Math.floor((Date.now()-last)/86400000):null;
-  const besoin=(ar.length||LIVES.length)&&(!last||jours>=7);
+  const modif=get("sociogramme-modif",0);
+  const besoin=(ar.length||LIVES.length||modif)&&(!last||jours>=7||modif>last);
   $("#bkWarn").hidden=!besoin;
-  $("#bkWarnTxt").textContent=!last?"Aucune sauvegarde n'a encore été faite. Si l'iPad est réinitialisé, toutes les réponses seront perdues.":`Dernière sauvegarde il y a ${jours} jours. Fais-en une nouvelle pour ne rien perdre.`;
+  $("#bkWarnTxt").textContent=last&&modif>last&&jours<7?"Il y a du nouveau depuis la dernière sauvegarde (accès, suivi ou séance). Un toucher suffit pour la mettre à jour.":!last?"Aucune sauvegarde n'a encore été faite. Si l'iPad est réinitialisé, toutes les réponses seront perdues.":`Dernière sauvegarde il y a ${jours} jours. Fais-en une nouvelle pour ne rien perdre.`;
   $("#refWho").textContent=`Espace référent · ouvert par : ${WHO||"Référent numérique"}`;
   const main=get(K.code,null), autres=get(K.codes,[])||[];
   $("#accList").innerHTML=`<div class="coll" style="grid-template-columns:minmax(0,1fr) auto"><div><strong>${esc((main&&main.nom)||"Référent numérique")}</strong><br><span class="small muted">Code principal</span></div><span class="pill p-done">Accès complet</span></div>`+
@@ -812,7 +815,8 @@ $("#accAdd").onclick=async()=>{
   if(c1!==c2){ m.textContent="Les deux codes sont différents."; return; }
   m.textContent="Création de l'accès…";
   try{ await addAccess(nom,c1); ["#accNom","#accCode","#accCode2"].forEach(x=>$(x).value=""); renderRef();
-    $("#accMsg").textContent=`Accès complet créé pour ${nom}. Pense à faire une sauvegarde.`; }
+    $("#accMsg").innerHTML=`Accès complet créé pour ${esc(nom)}. <button class="ghost" id="accBk" style="margin-top:6px">Enregistrer la sauvegarde maintenant</button>`;
+    $("#accBk").onclick=()=>shareBackup(false).then(r=>{ if(r==="ok"){ $("#accMsg").textContent=`Accès créé pour ${nom} et sauvegarde enregistrée.`; renderRef(); } }); }
   catch(err){ m.textContent="L'accès n'a pas pu être créé. Verrouille, rouvre l'Espace référent avec ton code, puis réessaie."; }
 };
 $("#educSave").onclick=async()=>{ const v=$("#educCode").value.trim();
@@ -920,7 +924,7 @@ function suiviOf(k){
 async function addSuivi(ev){
   ev={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),date:new Date().toISOString(),...ev};
   if(!resDemo){
-    try{ const all=get(K.suivi,{})||{}; (all[CUR.base]=all[CUR.base]||[]).push(await seal(ev)); if(!put(K.suivi,all,"Suivi non enregistré.")) return; }
+    try{ const all=get(K.suivi,{})||{}; (all[CUR.base]=all[CUR.base]||[]).push(await seal(ev)); if(!put(K.suivi,all,"Suivi non enregistré.")) return; put("sociogramme-modif",Date.now()); }
     catch(e){ oups("Suivi non enregistré.","Le chiffrement n'a pas fonctionné."); return; }
   }
   SUIVI.push(ev); PDFBLOB=null; $("#pdfBtn").textContent="Rapport PDF"; render();
@@ -1376,7 +1380,7 @@ $("#bkFile").addEventListener("change",e=>{
   }; rd.readAsText(f);
 });
 /* mise à jour automatique : à l'ouverture (et au retour sur l'accueil), on regarde si une nouvelle version est en ligne */
-const APP_VERSION="2026-10-15f";
+const APP_VERSION="2026-10-15g";
 async function checkUpdate(){
   try{
     if(location.protocol!=="https:") return;
