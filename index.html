@@ -1235,9 +1235,26 @@ $("#bkFile").addEventListener("change",e=>{
     }catch(err){ $("#bkMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }
   }; rd.readAsText(f);
 });
+/* mise à jour automatique : à l'ouverture (et au retour sur l'accueil), on regarde si une nouvelle version est en ligne */
+const APP_VERSION="2026-10-15d";
+async function checkUpdate(){
+  try{
+    if(location.protocol!=="https:") return;
+    if(!$("#vKiosk").hidden||!$("#adultPad").hidden) return;           /* jamais pendant qu'un élève répond */
+    const r=await fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}); if(!r.ok) return;
+    const m=(await r.text()).match(/APP_VERSION="([^"]+)"/); if(!m||m[1]===APP_VERSION) return;
+    let tried=null; try{ tried=sessionStorage.getItem("socio-maj"); }catch(e){}
+    if(tried===m[1]) return;                                              /* évite de recharger en boucle */
+    try{ sessionStorage.setItem("socio-maj",m[1]); }catch(e){}
+    if(!$("#vKiosk").hidden) return;
+    location.replace(location.pathname+"?v="+encodeURIComponent(m[1]));
+  }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&!$("#vHome").hidden) checkUpdate(); });
 /* au démarrage : écran d'accueil (ou séance en cours) */
 window.__socio={openResults,DEMO_DATA,DEMO_PREV,show,buildPdf:()=>buildPdf(),workGroups:s=>workGroups(s)};
 renderHome();
+checkUpdate();
 })();
 </script>
 
