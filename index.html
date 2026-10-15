@@ -40,6 +40,7 @@
   --edge:#5d716c; color-scheme:dark }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+body:not(.is-admin) .admin-only{display:none!important}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px;
@@ -330,6 +331,7 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
         <button class="quiet" id="forgotBtn">Code oublié ?</button>
         <div id="forgotBox" class="notice warn" hidden style="text-align:left"><svg class="i"><use href="#i-info"/></svg>
           <div style="display:grid;gap:10px"><span>Sans le code, personne ne peut lire les réponses, même pas Claude. Tu peux tout effacer sur cet iPad et créer un nouveau code. La liste des élèves est gardée.</span>
+          <label class="small" for="forgotWord">Pour confirmer, tape EFFACER :</label><input type="text" id="forgotWord" autocomplete="off" style="max-width:220px">
           <button class="danger" id="forgotWipe">Effacer toutes les réponses et recommencer</button></div></div>
       </div>
     </section>
@@ -348,33 +350,33 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
         <div id="collList" class="list"></div>
       </section>
       <div style="display:grid;gap:20px">
-        <section class="card" aria-labelledby="t-list">
+        <section class="card admin-only" aria-labelledby="t-list">
           <h3 id="t-list">Liste des élèves</h3>
           <p class="small muted" id="ecoleInfo"></p>
           <div class="row"><label class="filebtn ghost" for="fileEcole">Charger la liste<input type="file" id="fileEcole" accept=".csv,.xlsx,.xls"></label><button class="danger" id="ecoleClear" hidden>Retirer la liste</button></div>
           <p class="small muted">Fichier <b>eleves_sociogramme.csv</b> exporté de Smartschool. Les noms restent uniquement sur cet iPad.</p>
         </section>
-        <section class="card" aria-labelledby="t-q">
+        <section class="card admin-only" aria-labelledby="t-q">
           <h3 id="t-q">Les 5 questions</h3>
           <div id="qEdit" style="display:grid;gap:10px"></div>
           <label class="row" style="gap:10px;font-weight:400;align-items:flex-start"><input type="checkbox" id="qOpen" style="width:22px;height:22px;margin-top:2px"> <span>Ajouter à la fin : « Y a-t-il quelque chose que tu voudrais dire à un adulte ? » (facultatif pour l'élève, chiffré comme le reste)</span></label>
           <div class="row"><button class="ghost" id="qSave">Enregistrer les questions</button><span id="qMsg" class="small muted"></span></div>
           <p class="small muted">Vide une case pour retirer une question. Les séances déjà faites gardent leurs questions.</p>
         </section>
-        <section class="card" aria-labelledby="t-acc">
-          <h3 id="t-acc">Accès complets</h3>
-          <p class="small muted">Chaque personne a son propre code à 6 chiffres. Tous ouvrent les mêmes réponses, la même fiche de suivi et les mêmes réglages.</p>
+        <section class="card admin-only" aria-labelledby="t-acc">
+          <h3 id="t-acc">Accès direction et équipe</h3>
+          <p class="small muted">Chaque personne a son propre code à 6 chiffres et son propre espace : elle voit les séances, les résultats, le suivi et les rapports. Elle ne voit pas cette carte, ni les autres accès, et ne peut rien supprimer ni modifier dans les réglages. Toi seul gères tout.</p>
           <div id="accList" class="list"></div>
           <div class="sform">
             <div class="field"><label for="accNom">Nom de la personne</label><input type="text" id="accNom" placeholder="ex. : Directeur" autocomplete="off"></div>
             <div class="row"><div class="field" style="flex:1 1 140px"><label for="accCode">Son code (6 chiffres)</label><input type="password" id="accCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></div>
               <div class="field" style="flex:1 1 140px"><label for="accCode2">Le retaper</label><input type="password" id="accCode2" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="new-password"></div></div>
-            <div><button class="ghost" id="accAdd">Donner un accès complet</button></div>
+            <div><button class="ghost" id="accAdd">Donner un accès</button></div>
             <p class="small muted" id="accMsg" aria-live="polite"></p>
             <p class="small muted">Fais taper le code par la personne elle-même. Il ne s'affiche jamais et n'est enregistré nulle part en clair.</p>
           </div>
         </section>
-        <section class="card" aria-labelledby="t-educ">
+        <section class="card admin-only" aria-labelledby="t-educ">
           <h3 id="t-educ">Code de l'éducateur</h3>
           <p class="small muted" id="educInfo"></p>
           <div class="row"><div class="field" style="flex:0 1 160px"><label for="educCode">Nouveau code (4 chiffres)</label><input type="text" id="educCode" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off"></div><button class="ghost" id="educSave">Enregistrer</button></div>
@@ -383,8 +385,17 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
         <section class="card" aria-labelledby="t-bk">
           <h3 id="t-bk">Sauvegarde</h3>
           <p class="small muted" id="bkInfo"></p>
-          <div class="row"><button class="ghost" id="bkSave">Préparer la sauvegarde (PDF)</button><label class="filebtn ghost" for="bkFile">Restaurer<input type="file" id="bkFile" accept=".pdf,application/pdf,.json,application/json"></label></div>
+          <div class="row"><button class="ghost" id="bkSave">Préparer la sauvegarde (PDF)</button><label class="filebtn ghost admin-only" for="bkFile">Restaurer<input type="file" id="bkFile" accept=".pdf,application/pdf,.json,application/json"></label></div>
           <p class="small muted" id="bkMsg" aria-live="polite"></p>
+        </section>
+        <section class="card admin-only" aria-labelledby="t-demo">
+          <h3 id="t-demo">Classe de démonstration</h3>
+          <p class="small muted">Pour montrer l'outil à la direction et aux éducateurs : chacun répond lui-même sur l'iPad, comme un élève, puis vous regardez ensemble les résultats, le suivi et les rapports PDF.</p>
+          <div class="sform">
+            <div class="field"><label for="demoNoms">Participants (un nom par ligne, au moins 4)</label><textarea id="demoNoms" placeholder="Z Bennour&#10;Directeur adjoint&#10;F Dardour&#10;…"></textarea></div>
+            <div class="row"><button class="ghost" id="demoAdd">Créer la classe « DÉMO équipe »</button><button class="danger" id="demoDel" hidden>Supprimer la démo</button></div>
+            <p class="small muted" id="demoMsg" aria-live="polite"></p>
+          </div>
         </section>
       </div>
     </div>
@@ -496,16 +507,17 @@ async function createCode(pin){
   const priv=await S.exportKey("pkcs8",kp.privateKey), pub=await S.exportKey("spki",kp.publicKey);
   const ct=await S.encrypt({name:"AES-GCM",iv},await wrapKey(pin,salt),priv);
   if(!put(K.code,{v:1,nom:"Référent numérique",salt:b64(salt),iv:b64(iv),priv:b64(ct),pub:b64(pub)})) throw new Error("save");
-  PRIV_RAW=priv; WHO="Référent numérique";
+  PRIV_RAW=priv; WHO="Référent numérique"; setAdmin(true);
   return kp.privateKey;
 }
-let PRIV_RAW=null, WHO="";
+let PRIV_RAW=null, WHO="", ADMIN=false;
+const setAdmin=v=>{ ADMIN=!!v; document.body.classList.toggle("is-admin",ADMIN); };
 /* essaie le code du référent, puis les autres accès complets (directeur…) */
 async function openCode(pin){
   const main=get(K.code,null); const autres=get(K.codes,[])||[];
   for(const c of [main,...autres]){ if(!c) continue;
     try{ const raw=await S.decrypt({name:"AES-GCM",iv:unb64(c.iv)},await wrapKey(pin,unb64(c.salt)),unb64(c.priv));
-      PRIV_RAW=raw; WHO=c.nom||"Référent numérique";
+      PRIV_RAW=raw; WHO=c.nom||"Référent numérique"; setAdmin(c===main);
       return S.importKey("pkcs8",raw,{name:"RSA-OAEP",hash:"SHA-256"},false,["decrypt"]); }catch(e){} }
   throw new Error("code");
 }
@@ -755,17 +767,18 @@ async function submitPin(){
 $("#lockCancel").onclick=()=>renderHome();
 $("#forgotBtn").onclick=()=>{ $("#forgotBox").hidden=!$("#forgotBox").hidden; };
 $("#forgotWipe").onclick=function(){
-  if(!this.classList.contains("armed")){ this.classList.add("armed"); this.textContent="Confirmer : tout effacer"; return; }
+  if($("#forgotWord").value.trim().toUpperCase()!=="EFFACER"){ $("#forgotWord").focus(); return; }
+  if(!this.classList.contains("armed")){ this.classList.add("armed"); this.textContent="Dernière confirmation : tout effacer"; return; }
   [K.code,K.codes,K.ar,K.live,K.lives,K.educ,K.suivi,"sociogramme-essais"].forEach(del); LIVES=[]; LIVE=null; PUB=null; PRIV=null; PRIV_RAW=null; openLock();
 };
 /* verrouillage automatique : quand l'iPad se met en veille ou après 10 minutes sans toucher */
-function lockNow(){ PRIV=null; PRIV_RAW=null; if(!$("#vRef").hidden||(!$("#vRes").hidden&&!resDemo)) renderHome(); }
+function lockNow(){ PRIV=null; PRIV_RAW=null; setAdmin(false); if(!$("#vRef").hidden||(!$("#vRes").hidden&&!resDemo)) renderHome(); }
 document.addEventListener("visibilitychange",()=>{ if(document.hidden) lockNow(); });
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,()=>{ clearTimeout(lockTimer); if(PRIV) lockTimer=setTimeout(lockNow,600000); }));
 
 /* ============ ESPACE RÉFÉRENT ============ */
 function openRef(){ if(!PRIV){ openLock(); return; } renderRef(); show("vRef"); }
-$("#refLock").onclick=()=>{ PRIV=null; PRIV_RAW=null; renderHome("Espace réservé verrouillé."); };
+$("#refLock").onclick=()=>{ PRIV=null; PRIV_RAW=null; setAdmin(false); renderHome("Espace réservé verrouillé."); };
 function renderRef(){
   const ar=get(K.ar,[]); const items=[];
   LIVES.forEach(L=>items.push({live:true,id:L.id,classe:L.classe,date:L.debut,n:L.done.length,t:L.eleves.length}));
@@ -774,7 +787,7 @@ function renderRef(){
       <div style="display:grid;gap:2px;min-width:0"><strong>${esc(x.classe)}</strong><span class="small muted">${x.live?"En cours depuis le ":"Terminée le "}${esc(x.date||"")} · ${x.n}/${x.t} élèves</span></div>
       <div class="acts"><span class="pill ${x.live?"p-live":"p-done"}">${x.live?"En cours":"Terminée"}</span>
         <button class="ghost" data-open="${x.live?"live:"+x.id:x.i}" ${x.n?"":"disabled"}>Voir les résultats</button>
-        ${x.live?"":`<button class="danger" data-del="${x.i}">Supprimer</button>`}</div></div>`).join("")
+        ${x.live||!ADMIN?"":`<button class="danger" data-del="${x.i}">Supprimer</button>`}</div></div>`).join("")
     :`<div class="notice"><svg class="i"><use href="#i-info"/></svg><span>Aucune séance pour l'instant. Quand l'éducateur termine une séance, elle apparaît ici.</span></div>`);
   $("#collList").querySelectorAll("[data-open]").forEach(b=>b.onclick=async()=>{
     const o=b.dataset.open; b.disabled=true; b.textContent="Déchiffrement…";
@@ -784,13 +797,13 @@ function renderRef(){
   $("#collList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
     if(!b.classList.contains("armed")){ b.classList.add("armed"); b.textContent="Confirmer"; return; }
     const a=get(K.ar,[]); a.splice(+b.dataset.del,1); put(K.ar,a); renderRef(); });
-  showEcole(); renderQEdit();
+  showEcole(); renderQEdit(); renderDemo();
   const last=get(K.bk,0), jours=last?Math.floor((Date.now()-last)/86400000):null;
   const modif=get("sociogramme-modif",0);
   const besoin=(ar.length||LIVES.length||modif)&&(!last||jours>=7||modif>last);
   $("#bkWarn").hidden=!besoin;
   $("#bkWarnTxt").textContent=last&&modif>last&&jours<7?"Il y a du nouveau depuis la dernière sauvegarde (accès, suivi ou séance). Un toucher suffit pour la mettre à jour.":!last?"Aucune sauvegarde n'a encore été faite. Si l'iPad est réinitialisé, toutes les réponses seront perdues.":`Dernière sauvegarde il y a ${jours} jours. Fais-en une nouvelle pour ne rien perdre.`;
-  $("#refWho").textContent=`Espace de ${WHO||"Référent numérique"} · accès complet`;
+  $("#refWho").textContent=ADMIN?`Espace de ${WHO||"Référent numérique"} · gestion complète`:`Espace de ${WHO}`;
   const main=get(K.code,null), autres=get(K.codes,[])||[];
   $("#accList").innerHTML=`<div class="coll" style="grid-template-columns:minmax(0,1fr) auto"><div><strong>${esc((main&&main.nom)||"Référent numérique")}</strong><br><span class="small muted">Code principal</span></div><span class="pill p-done">Accès complet</span></div>`+
     autres.map(a=>`<div class="coll" style="grid-template-columns:minmax(0,1fr) auto"><div><strong>${esc(a.nom)}</strong><br><span class="small muted">Ajouté le ${dfmt(a.date)}</span></div><div class="acts"><span class="pill p-done">Accès complet</span><button class="danger" data-acc="${esc(a.id)}">Retirer</button></div></div>`).join("");
@@ -826,6 +839,25 @@ $("#accAdd").onclick=async()=>{
     backupFlow($("#accBk"),$("#accMsg"),()=>{ renderRef(); $("#accMsg").textContent=`Accès créé pour ${nom} et sauvegarde enregistrée.`; }); }
   catch(err){ m.textContent="L'accès n'a pas pu être créé. Verrouille, rouvre l'Espace réservé avec ton code, puis réessaie."; }
 };
+const DEMO_CL="DÉMO équipe";
+function renderDemo(){ const has=!!(ECOLE&&ECOLE.classes&&ECOLE.classes[DEMO_CL]);
+  $("#demoDel").hidden=!has; $("#demoAdd").textContent=has?"Remplacer les participants":"Créer la classe « DÉMO équipe »";
+  if(has&&!$("#demoNoms").value) $("#demoNoms").value=ECOLE.classes[DEMO_CL].join("\n"); }
+$("#demoAdd").onclick=()=>{
+  const noms=[...new Set($("#demoNoms").value.split(/\n/).map(x=>x.trim()).filter(Boolean))];
+  if(noms.length<4){ $("#demoMsg").textContent="Mets au moins 4 participants, un par ligne."; return; }
+  const E=ECOLE&&ECOLE.classes?ECOLE:{date:new Date().toLocaleDateString("fr-BE"),classes:{}};
+  E.classes[DEMO_CL]=noms.sort((a,b)=>a.localeCompare(b,"fr"));
+  if(!put(K.ec,E,"Démo non enregistrée.")) return; ECOLE=E;
+  $("#demoMsg").textContent=`Classe « ${DEMO_CL} » prête (${noms.length} participants). Verrouille, puis sur l'accueil choisis « ${DEMO_CL} » et lance la séance.`;
+  renderDemo(); showEcole(); };
+$("#demoDel").onclick=function(){
+  if(!this.classList.contains("armed")){ this.classList.add("armed"); this.textContent="Confirmer la suppression"; return; }
+  this.classList.remove("armed");
+  if(ECOLE&&ECOLE.classes){ delete ECOLE.classes[DEMO_CL]; put(K.ec,ECOLE); }
+  put(K.ar,(get(K.ar,[])||[]).filter(a=>a.classe!==DEMO_CL)); LIVES=LIVES.filter(x=>x.classe!==DEMO_CL); saveLives();
+  const sv=get(K.suivi,{})||{}; delete sv[DEMO_CL]; put(K.suivi,sv);
+  $("#demoNoms").value=""; $("#demoMsg").textContent="Démo supprimée : la classe, ses réponses et son suivi ont été effacés."; renderDemo(); renderRef(); };
 $("#educSave").onclick=async()=>{ const v=$("#educCode").value.trim();
   if(!/^\d{4}$/.test(v)){ $("#educMsg").textContent="Le code doit avoir exactement 4 chiffres."; return; }
   const salt=b64(crypto.getRandomValues(new Uint8Array(12)));
@@ -1392,7 +1424,7 @@ async function prepareBackup(){
   const nSuivi=Object.values(data[K.suivi]||{}).reduce((t,l)=>t+l.length,0), ec=data[K.ec];
   h("Ce que contient cette sauvegarde");
   tbl({body:[["Séances terminées",String(ar.length)],["Séances en cours",String(lv.length)],["Notes et actions de suivi",String(nSuivi)+" (chiffrées)"],
-    ["Accès complets",codes.join(", ")],["Code éducateur",data[K.educ]?"Oui":"Non"],
+    ...(ADMIN?[["Accès",codes.join(", ")]]:[]),["Code éducateur",data[K.educ]?"Oui":"Non"],
     ["Liste des élèves",ec&&ec.classes?`${Object.values(ec.classes).reduce((t,l)=>t+l.length,0)} élèves dans ${Object.keys(ec.classes).length} classes (chargée le ${ec.date})`:"Aucune"],
     ["Questions",(data[K.q]||QDEF).join(" / ")]].map(r=>r.map(T)),columnStyles:{0:{cellWidth:52,fontStyle:"bold"}}});
   if(ar.length||lv.length){ h("Séances");
@@ -1437,7 +1469,7 @@ $("#lockFile").addEventListener("change",e=>{ const f=e.target.files[0]; e.targe
   readBackup(f).then(d=>{ applyBackup(d); openLock(); $("#lockText").textContent="Sauvegarde restaurée. Tape ton code habituel."; })
     .catch(()=>{ $("#lockRestoreMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }); });
 /* mise à jour automatique : à l'ouverture (et au retour sur l'accueil), on regarde si une nouvelle version est en ligne */
-const APP_VERSION="2026-10-15i";
+const APP_VERSION="2026-10-15j";
 async function checkUpdate(){
   try{
     if(location.protocol!=="https:") return;
