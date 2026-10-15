@@ -392,8 +392,9 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
           <h3 id="t-demo">Classe de démonstration</h3>
           <p class="small muted">Pour montrer l'outil à la direction et aux éducateurs : chacun répond lui-même sur l'iPad, comme un élève, puis vous regardez ensemble les résultats, le suivi et les rapports PDF.</p>
           <div class="sform">
-            <div class="field"><label for="demoNoms">Participants (un nom par ligne, au moins 4)</label><textarea id="demoNoms" placeholder="Z Bennour&#10;Directeur adjoint&#10;F Dardour&#10;…"></textarea></div>
-            <div class="row"><button class="ghost" id="demoAdd">Créer la classe « DÉMO équipe »</button><button class="danger" id="demoDel" hidden>Supprimer la démo</button></div>
+            <div class="field"><label for="demoNoms">Participants (un nom par ligne, au moins 4). Pour les réponses d'exemple : le 1er nom sera la personne « ressource », le dernier jouera la personne « en retrait » (mets-toi en dernier).</label><textarea id="demoNoms" placeholder="Z Bennour&#10;Directeur adjoint&#10;F Dardour&#10;…"></textarea></div>
+            <div class="row"><button class="ghost" id="demoAdd">Créer la classe « DÉMO équipe »</button><button id="demoFill" hidden>Remplir avec des réponses d'exemple</button><button class="danger" id="demoDel" hidden>Supprimer la démo</button></div>
+            <p class="small muted">Les questions de la démo sont adaptées aux adultes (projet, conseil, pause, journée difficile, voyage). « Remplir avec des réponses d'exemple » crée deux séances (juin et aujourd'hui) avec des réponses réalistes, pour tout montrer sans faire passer l'iPad.</p>
             <p class="small muted" id="demoMsg" aria-live="polite"></p>
           </div>
         </section>
@@ -482,9 +483,10 @@ const ICONS={
   confier:'<path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M12 13.4l-2.4-2.3a1.5 1.5 0 0 1 2.4-1.8 1.5 1.5 0 0 1 2.4 1.8z"/>',
   voyage:'<rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 10h14M8 21v-3M16 21v-3"/><path d="M8.5 14.5h.1M15.5 14.5h.1"/>',
   autre:'<path d="M12 3C7 8 5 12 6 15.5S10 21 12 21s5-2 6-5.5S17 8 12 3z"/><path d="M12 9v12"/>'};
-const iconFor=q=>{ const n=norm(q); return ICONS[/travail/.test(n)?"travail":/aide/.test(n)?"aide":/recre/.test(n)?"recre":/ne va pas|confi|parles/.test(n)?"confier":/voyage/.test(n)?"voyage":"autre"]; };
+const iconFor=q=>{ const n=norm(q); return ICONS[/travail/.test(n)?"travail":/aide/.test(n)?"aide":/recre|pause/.test(n)?"recre":/ne va pas|confi|parles/.test(n)?"confier":/voyage/.test(n)?"voyage":"autre"]; };
 const QDEF=["Avec qui aimes-tu travailler en classe ?","À qui demandes-tu de l'aide quand tu ne comprends pas ?","Avec qui aimes-tu passer la récréation ?","À qui parles-tu quand quelque chose ne va pas ?","Avec qui aimerais-tu partir en voyage scolaire ?"];
 const NB=2;
+const DEMO_Q=["Avec qui aimes-tu travailler sur un projet ?","À qui demandes-tu de l'aide ou un conseil quand tu as un doute ?","Avec qui aimes-tu prendre ta pause ?","À qui parles-tu quand une journée a été difficile ?","Avec qui partirais-tu accompagner un voyage scolaire ?"];
 
 /* ---------- stockage local (tout reste sur cet iPad) ---------- */
 const K={ec:"sociogramme-eleves",live:"sociogramme-collecte",lives:"sociogramme-seances",ar:"sociogramme-archives",code:"sociogramme-code",q:"sociogramme-questions",educ:"sociogramme-code-educ",qopen:"sociogramme-question-ouverte",bk:"sociogramme-derniere-sauvegarde",suivi:"sociogramme-suivi",codes:"sociogramme-codes"};
@@ -588,7 +590,7 @@ $("#hClasse").onchange=()=>{ $("#hStart").disabled=!$("#hClasse").value; };
 $("#hStart").onclick=async()=>{
   const c=$("#hClasse").value; if(!c||!ECOLE) return;
   if(!(await pubKey())){ renderHome(); return; }
-  LIVE={id:Date.now(),classe:c,eleves:ECOLE.classes[c].slice(),q:questions(),open:get(K.qopen,true)!==false,done:[],rows:[],debut:new Date().toLocaleDateString("fr-BE")};
+  LIVE={id:Date.now(),classe:c,eleves:ECOLE.classes[c].slice(),q:c===DEMO_CL?DEMO_Q.slice():questions(),open:get(K.qopen,true)!==false,done:[],rows:[],debut:new Date().toLocaleDateString("fr-BE")};
   LIVES.push(LIVE); if(saveLives()) openKiosk(); else { LIVES.pop(); LIVE=null; }
 };
 const _hDemo=()=>{ LIVE_DEMO={demo:true,classe:"1X exemple",eleves:DEMO.eleves.slice(),q:QDEF.slice(),done:[],rows:[]}; openKiosk(true); };
@@ -841,16 +843,47 @@ $("#accAdd").onclick=async()=>{
 };
 const DEMO_CL="DÉMO équipe";
 function renderDemo(){ const has=!!(ECOLE&&ECOLE.classes&&ECOLE.classes[DEMO_CL]);
-  $("#demoDel").hidden=!has; $("#demoAdd").textContent=has?"Remplacer les participants":"Créer la classe « DÉMO équipe »";
+  $("#demoDel").hidden=!has; $("#demoFill").hidden=!has; $("#demoAdd").textContent=has?"Remplacer les participants":"Créer la classe « DÉMO équipe »";
   if(has&&!$("#demoNoms").value) $("#demoNoms").value=ECOLE.classes[DEMO_CL].join("\n"); }
 $("#demoAdd").onclick=()=>{
   const noms=[...new Set($("#demoNoms").value.split(/\n/).map(x=>x.trim()).filter(Boolean))];
   if(noms.length<4){ $("#demoMsg").textContent="Mets au moins 4 participants, un par ligne."; return; }
   const E=ECOLE&&ECOLE.classes?ECOLE:{date:new Date().toLocaleDateString("fr-BE"),classes:{}};
-  E.classes[DEMO_CL]=noms.sort((a,b)=>a.localeCompare(b,"fr"));
+  E.demoOrdre=noms.slice(); E.classes[DEMO_CL]=noms.slice().sort((a,b)=>a.localeCompare(b,"fr"));
   if(!put(K.ec,E,"Démo non enregistrée.")) return; ECOLE=E;
   $("#demoMsg").textContent=`Classe « ${DEMO_CL} » prête (${noms.length} participants). Verrouille, puis sur l'accueil choisis « ${DEMO_CL} » et lance la séance.`;
   renderDemo(); showEcole(); };
+/* réponses d'exemple : deux petits groupes, une personne en retrait, une personne « ressource », un message */
+function demoAnswers(noms,avant){
+  const n=noms.length, iso=noms[n-1], res=noms[0], half=Math.ceil((n-1)/2);
+  const A=noms.slice(0,half), B=noms.slice(half,n-1);
+  const rows=[];
+  noms.forEach((w,i)=>{
+    const grp=A.includes(w)?A:B.length?B:A, autres=grp.filter(x=>x!==w), autre=(grp===A?B:A).filter(x=>x!==w);
+    const pick=(k)=>{ const l=autres.length?autres:autre; return [l[(i+k)%l.length]].concat(l.length>1&&(i+k)%2===0?[l[(i+k+1)%l.length]]:[]).filter((x,j,a)=>x&&x!==w&&a.indexOf(x)===j); };
+    let picks=[pick(0),[res===w?(autre[0]||autres[0]):res],pick(1),[res===w?(autres[0]||autre[0]):res],pick(2)];
+    if(w===iso) picks=[[res],[res],avant?[A[1]||res]:[],[],[res]];
+    if(!avant&&n>=5&&w===noms[n-2]){ picks[2]=[]; picks[3]=[]; }
+    if(avant&&w===(A[1]||res)) picks[2]=[iso];                 /* en juin, quelqu'un allait vers la personne en retrait */
+    if(avant&&w===(B[0]||res)) picks[0]=[iso];
+    rows.push(w===iso&&!avant?{who:w,picks,msg:"Je me sens un peu à l'écart dans l'équipe, surtout pendant les pauses."}:{who:w,picks});
+  });
+  return rows;
+}
+$("#demoFill").onclick=async function(){
+  const cl=ECOLE&&ECOLE.classes&&ECOLE.classes[DEMO_CL]; if(!cl||cl.length<4) return;
+  const noms=(ECOLE.demoOrdre&&ECOLE.demoOrdre.length===cl.length)?ECOLE.demoOrdre.slice():cl.slice();
+  this.disabled=true; $("#demoMsg").textContent="Création des réponses d'exemple…";
+  try{
+    const ar=(get(K.ar,[])||[]).filter(a=>a.classe!==DEMO_CL); LIVES=LIVES.filter(x=>x.classe!==DEMO_CL); saveLives();
+    const mk=async(avant,date,id)=>{ const rows=[]; for(const r of demoAnswers(noms,avant)) rows.push(await seal(r)); return {id,classe:DEMO_CL,date,q:DEMO_Q.slice(),eleves:cl.slice(),rows}; };
+    ar.unshift(await mk(true,"15/06/2026",Date.now()-1)); ar.unshift(await mk(false,new Date().toLocaleDateString("fr-BE"),Date.now()));
+    put(K.ar,ar); put("sociogramme-modif",Date.now());
+    $("#demoMsg").textContent="Deux séances d'exemple créées (juin et aujourd'hui). Ouvre « DÉMO équipe » dans les séances, puis choisis « Comparer avec : séance du 15/06/2026 ».";
+    renderRef();
+  }catch(e){ $("#demoMsg").textContent="Les réponses d'exemple n'ont pas pu être créées."; }
+  this.disabled=false;
+};
 $("#demoDel").onclick=function(){
   if(!this.classList.contains("armed")){ this.classList.add("armed"); this.textContent="Confirmer la suppression"; return; }
   this.classList.remove("armed");
@@ -1469,7 +1502,7 @@ $("#lockFile").addEventListener("change",e=>{ const f=e.target.files[0]; e.targe
   readBackup(f).then(d=>{ applyBackup(d); openLock(); $("#lockText").textContent="Sauvegarde restaurée. Tape ton code habituel."; })
     .catch(()=>{ $("#lockRestoreMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }); });
 /* mise à jour automatique : à l'ouverture (et au retour sur l'accueil), on regarde si une nouvelle version est en ligne */
-const APP_VERSION="2026-10-15j";
+const APP_VERSION="2026-10-15k";
 async function checkUpdate(){
   try{
     if(location.protocol!=="https:") return;
