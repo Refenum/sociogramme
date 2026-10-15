@@ -252,6 +252,7 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
     </section>
 
     <div id="homeMsg" class="notice ok" hidden><svg class="i"><use href="#i-shield"/></svg><span></span></div>
+    <div id="homeBk" class="row" hidden><button class="ghost" id="homeBkBtn">Préparer la sauvegarde</button><span id="homeBkMsg" class="small muted">Range-la ensuite dans OneDrive : elle protège les réponses si l'iPad est effacé.</span></div>
 
     <div class="homegrid">
       <section class="card" aria-labelledby="t-start">
@@ -321,6 +322,10 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
       <div class="row" style="justify-content:center">
         <button class="quiet" id="lockCancel">Retour à l'accueil</button>
       </div>
+      <div id="lockRestore" style="display:grid;gap:6px;justify-items:center" hidden>
+        <label class="filebtn ghost" for="lockFile">Restaurer une sauvegarde<input type="file" id="lockFile" accept=".pdf,application/pdf,.json,application/json"></label>
+        <span class="small muted" id="lockRestoreMsg">L'iPad a été effacé ? Choisis le PDF de sauvegarde rangé dans OneDrive.</span>
+      </div>
       <div id="forgot" style="display:grid;gap:8px;justify-items:center">
         <button class="quiet" id="forgotBtn">Code oublié ?</button>
         <div id="forgotBox" class="notice warn" hidden style="text-align:left"><svg class="i"><use href="#i-info"/></svg>
@@ -377,8 +382,8 @@ textarea.msg:focus-visible{outline:3px solid var(--qc);outline-offset:2px}
         </section>
         <section class="card" aria-labelledby="t-bk">
           <h3 id="t-bk">Sauvegarde</h3>
-          <p class="small muted" id="bkInfo">Garde une copie de tout (ton code, les séances, la liste) dans un fichier. Les réponses y restent chiffrées : sans ton code, le fichier est illisible.</p>
-          <div class="row"><button class="ghost" id="bkSave">Télécharger une sauvegarde</button><label class="filebtn ghost" for="bkFile">Restaurer<input type="file" id="bkFile" accept=".json,application/json"></label></div>
+          <p class="small muted" id="bkInfo"></p>
+          <div class="row"><button class="ghost" id="bkSave">Préparer la sauvegarde (PDF)</button><label class="filebtn ghost" for="bkFile">Restaurer<input type="file" id="bkFile" accept=".pdf,application/pdf,.json,application/json"></label></div>
           <p class="small muted" id="bkMsg" aria-live="polite"></p>
         </section>
       </div>
@@ -533,7 +538,7 @@ const VIEWS=["vHome","vEnd","vKiosk","vLock","vRef","vRes"];
 function show(v){ VIEWS.forEach(x=>$("#"+x).hidden=x!==v); $("#toRef").hidden=v!=="vHome"; window.scrollTo(0,0); }
 
 /* ============ ACCUEIL ============ */
-let ECOLE=get(K.ec,null);
+let ECOLE=get(K.ec,null), HOMEBK=false;
 /* séances en cours : plusieurs classes peuvent être en cours en même temps */
 let LIVES=get(K.lives,null);
 if(!Array.isArray(LIVES)){ LIVES=[]; const old=get(K.live,null);
@@ -563,6 +568,8 @@ function renderHome(msg){
   lc.querySelectorAll("[data-resume]").forEach(b=>b.onclick=()=>{ LIVE=LIVES.find(x=>String(x.id)===b.dataset.resume); if(LIVE) openKiosk(); });
   lc.querySelectorAll("[data-end]").forEach(b=>b.onclick=()=>{ LIVE=LIVES.find(x=>String(x.id)===b.dataset.end); if(LIVE) askEnd(); });
   const m=$("#homeMsg"); m.hidden=!msg; if(msg) m.querySelector("span").textContent=msg;
+  $("#homeBk").hidden=!HOMEBK;
+  if(HOMEBK) backupFlow($("#homeBkBtn"),$("#homeBkMsg"),()=>{ HOMEBK=false; $("#homeBk").hidden=true; const sp=$("#homeMsg span"); if(sp) sp.textContent+=" Sauvegarde enregistrée."; });
   show("vHome");
 }
 $("#hClasse").onchange=()=>{ $("#hStart").disabled=!$("#hClasse").value; };
@@ -587,10 +594,8 @@ $("#endYes").onclick=()=>{
   put("sociogramme-modif",Date.now());
   const c=LIVE.classe, n=LIVE.done.length; LIVES=LIVES.filter(x=>x!==LIVE); saveLives(); LIVE=null;
   renderHome(`Séance ${c} terminée : ${n} réponse${n>1?"s":""} mise${n>1?"s":""} à l'abri. Seul le référent numérique peut les lire.`);
-  /* sauvegarde automatique : la feuille de partage s'ouvre tout de suite (OneDrive, Fichiers…) */
-  shareBackup(true).then(r=>{ const m=$("#homeMsg span"); if(!m) return;
-    if(r==="ok") m.textContent+=" Sauvegarde enregistrée.";
-    else if(r==="cancel") m.textContent+=" Sauvegarde non enregistrée : le référent pourra la faire depuis son espace."; });
+  /* sauvegarde proposée tout de suite (PDF lisible, réponses chiffrées à l'intérieur) */
+  HOMEBK=true; renderHome(`Séance ${c} terminée : ${n} réponse${n>1?"s":""} mise${n>1?"s":""} à l'abri. Seul le référent numérique peut les lire.`);
 };
 $("#toRef").onclick=()=>{ PRIV?openRef():openLock(); };
 
@@ -714,7 +719,7 @@ let PRIV=null, PIN="", MODE="open", FIRST="", lockTimer=null;
 const tries=()=>get("sociogramme-essais",{n:0,until:0});
 function openLock(){
   PIN=""; FIRST=""; MODE=get(K.code,null)?"open":"new";
-  $("#forgot").hidden=MODE==="new"; $("#forgotBox").hidden=true; $("#lockErr").textContent="";
+  $("#forgot").hidden=MODE==="new"; $("#lockRestore").hidden=MODE!=="new"; $("#forgotBox").hidden=true; $("#lockErr").textContent="";
   lockTexts(); drawPad(); show("vLock");
 }
 function lockTexts(){
@@ -795,7 +800,9 @@ function renderRef(){
   const e=get(K.educ,null);
   $("#educInfo").textContent=e?"Un code éducateur est enregistré : il est demandé quand on touche « Adulte » pendant la séance. Donne-le seulement à l'éducateur.":"Pas encore de code : pour sortir de la séance, il faut maintenir « Adulte » appuyé. Un code à 4 chiffres est plus sûr.";
   $("#qOpen").checked=get(K.qopen,true)!==false;
-  $("#bkInfo").textContent=(last?`Dernière sauvegarde : ${new Date(last).toLocaleDateString("fr-BE")}. `:"Aucune sauvegarde pour l'instant. ")+"Garde une copie de tout (ton code, les séances, la liste) dans un fichier. Les réponses y restent chiffrées.";
+  BKBLOB=null; $("#bkSave").textContent="Préparer la sauvegarde (PDF)"; $("#bkWarnBtn").textContent="Sauvegarder maintenant";
+  backupFlow($("#bkSave"),$("#bkMsg"),()=>renderRef()); backupFlow($("#bkWarnBtn"),$("#bkWarnTxt"),()=>renderRef());
+  $("#bkInfo").textContent=(last?`Dernière sauvegarde : ${new Date(last).toLocaleDateString("fr-BE")}. `:"Aucune sauvegarde pour l'instant. ")+"La sauvegarde est un PDF lisible : il résume ce qui est enregistré (classes, dates, accès). Les réponses et le suivi y sont cachés et chiffrés. Range-le dans OneDrive.";
 }
 function showEcole(){
   if(!ECOLE||!ECOLE.classes){ $("#ecoleInfo").textContent="Aucune liste chargée. Charge le fichier une seule fois : l'éducateur n'aura plus qu'à choisir la classe."; $("#ecoleClear").hidden=true; return; }
@@ -815,15 +822,15 @@ $("#accAdd").onclick=async()=>{
   if(c1!==c2){ m.textContent="Les deux codes sont différents."; return; }
   m.textContent="Création de l'accès…";
   try{ await addAccess(nom,c1); ["#accNom","#accCode","#accCode2"].forEach(x=>$(x).value=""); renderRef();
-    $("#accMsg").innerHTML=`Accès complet créé pour ${esc(nom)}. <button class="ghost" id="accBk" style="margin-top:6px">Enregistrer la sauvegarde maintenant</button>`;
-    $("#accBk").onclick=()=>shareBackup(false).then(r=>{ if(r==="ok"){ $("#accMsg").textContent=`Accès créé pour ${nom} et sauvegarde enregistrée.`; renderRef(); } }); }
+    $("#accMsg").innerHTML=`Accès complet créé pour ${esc(nom)}. <button class="ghost" id="accBk" style="margin-top:6px">Préparer la sauvegarde</button>`;
+    backupFlow($("#accBk"),$("#accMsg"),()=>{ renderRef(); $("#accMsg").textContent=`Accès créé pour ${nom} et sauvegarde enregistrée.`; }); }
   catch(err){ m.textContent="L'accès n'a pas pu être créé. Verrouille, rouvre l'Espace réservé avec ton code, puis réessaie."; }
 };
 $("#educSave").onclick=async()=>{ const v=$("#educCode").value.trim();
   if(!/^\d{4}$/.test(v)){ $("#educMsg").textContent="Le code doit avoir exactement 4 chiffres."; return; }
   const salt=b64(crypto.getRandomValues(new Uint8Array(12)));
   if(put(K.educ,{salt,hash:await hashEduc(v,salt)})){ $("#educCode").value=""; $("#educMsg").textContent="Code éducateur enregistré. Donne-le à l'éducateur."; renderRef(); } };
-$("#bkWarnBtn").onclick=()=>{ shareBackup(false).then(r=>{ if(r==="ok") renderRef(); }); };
+
 /* charge une séance (en cours ou terminée) et déchiffre ses réponses */
 async function loadSession(o){
   const Lv=String(o).startsWith("live:")?LIVES.find(x=>"live:"+x.id===o):null;
@@ -1358,29 +1365,79 @@ async function shareFile(blob,name,title){
   try{ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
     setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000); return "ok"; }catch(e){ return "fail"; }
 }
-/* auto = après une séance : sans la liste des élèves (seules des données chiffrées et les noms de classes) */
-function shareBackup(auto){
-  const data={app:"sociogramme-la-vertu",v:2,date:new Date().toISOString()};
-  BK_KEYS.forEach(k=>{ if(auto&&k===K.ec) return; const v=get(k,null); if(v!==null) data[k]=v; });
-  const blob=new Blob([JSON.stringify(data)],{type:"application/json"});
-  const name="sauvegarde-sociogramme-"+new Date().toISOString().slice(0,10)+".json";
-  return shareFile(blob,name,"Sauvegarde Sociogramme").then(r=>{ if(r==="ok") put(K.bk,Date.now()); return r; });
+/* ---------- sauvegarde = un PDF lisible ; les données (chiffrées) sont glissées à la fin du fichier ---------- */
+const BK_MARK="%SOCIOGRAMME-SAUVEGARDE:";
+let BKBLOB=null, BKNAME="";
+const b64u=str=>{ const by=enc.encode(str); let s=""; for(let i=0;i<by.length;i+=8192) s+=String.fromCharCode.apply(null,by.subarray(i,i+8192)); return btoa(s); };
+const unb64u=b=>dec.decode(unb64(b));
+async function prepareBackup(){
+  const data={app:"sociogramme-la-vertu",v:3,date:new Date().toISOString()};
+  BK_KEYS.forEach(k=>{ const v=get(k,null); if(v!==null) data[k]=v; });
+  for(const u of LIBS) await loadScript(u);
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4",compress:true});
+  const W=210,M=16,CW=W-2*M; let y=0; const color=(c,t="text")=>t==="text"?doc.setTextColor(...c):t==="fill"?doc.setFillColor(...c):doc.setDrawColor(...c);
+  const now=new Date(), quand=now.toLocaleDateString("fr-BE")+" à "+now.toLocaleTimeString("fr-BE",{hour:"2-digit",minute:"2-digit"});
+  color(PDFC.bg,"fill"); doc.rect(0,0,W,52,"F");
+  try{ doc.addImage(document.querySelector(".logo img").src,"PNG",M,9,28,34); }catch(e){}
+  color(PDFC.green); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.text(T("SAUVEGARDE DU SOCIOGRAMME"),M+36,16);
+  color(PDFC.ink); doc.setFontSize(22); doc.text(T("Sauvegarde du "+quand),M+36,27);
+  doc.setFont("helvetica","normal"); doc.setFontSize(10.5); color(PDFC.muted);
+  doc.text(T("Institut La Vertu · iPad du Sociogramme"),M+36,35); doc.text(T("À garder dans OneDrive : permet de tout remettre en place si l'iPad est effacé."),M+36,41);
+  y=60;
+  color(PDFC.okS,"fill"); const note=doc.splitTextToSize(T("Ce document ne contient aucune réponse lisible. Les réponses des élèves et le suivi sont rangés à l'intérieur de ce PDF, chiffrés : seuls les codes d'accès complets peuvent les ouvrir, une fois la sauvegarde restaurée sur l'iPad."),CW-10);
+  doc.roundedRect(M,y,CW,note.length*4.6+8,2,2,"F"); color(PDFC.ink); doc.setFontSize(10); doc.text(note,M+5,y+7); y+=note.length*4.6+16;
+  const tbl=o=>{ doc.autoTable(Object.assign({startY:y,margin:{left:M,right:M},theme:"plain",styles:{font:"helvetica",fontSize:9.5,textColor:PDFC.ink,cellPadding:2.2,lineColor:PDFC.line,lineWidth:{bottom:.2}},headStyles:{fontStyle:"bold",textColor:PDFC.muted,fontSize:8.5,fillColor:PDFC.sunk}},o)); y=doc.lastAutoTable.finalY+8; };
+  const h=t=>{ if(y>255){ doc.addPage(); y=20; } color(PDFC.ink); doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.text(T(t),M,y); y+=6; };
+  const ar=data[K.ar]||[], lv=data[K.lives]||[], codes=[(data[K.code]&&data[K.code].nom)||"Référent numérique"].concat((data[K.codes]||[]).map(c=>c.nom));
+  const nSuivi=Object.values(data[K.suivi]||{}).reduce((t,l)=>t+l.length,0), ec=data[K.ec];
+  h("Ce que contient cette sauvegarde");
+  tbl({body:[["Séances terminées",String(ar.length)],["Séances en cours",String(lv.length)],["Notes et actions de suivi",String(nSuivi)+" (chiffrées)"],
+    ["Accès complets",codes.join(", ")],["Code éducateur",data[K.educ]?"Oui":"Non"],
+    ["Liste des élèves",ec&&ec.classes?`${Object.values(ec.classes).reduce((t,l)=>t+l.length,0)} élèves dans ${Object.keys(ec.classes).length} classes (chargée le ${ec.date})`:"Aucune"],
+    ["Questions",(data[K.q]||QDEF).join(" / ")]].map(r=>r.map(T)),columnStyles:{0:{cellWidth:52,fontStyle:"bold"}}});
+  if(ar.length||lv.length){ h("Séances");
+    tbl({head:[["Classe","Statut","Date","Réponses"]],body:lv.map(L=>[L.classe,"En cours",L.debut||"",`${L.done.length} / ${L.eleves.length}`]).concat(ar.map(a=>[a.classe,"Terminée",a.date||"",`${a.rows.length} / ${a.eleves.length}`])).map(r=>r.map(T))}); }
+  h("Pour tout remettre en place");
+  tbl({body:[["1","Ouvre le Sociogramme sur l'iPad et touche « Espace réservé »."],["2","Si l'iPad a été effacé : touche « Restaurer une sauvegarde » (sous le clavier). Sinon : dans l'Espace réservé, carte Sauvegarde, touche « Restaurer »."],["3","Choisis ce PDF dans OneDrive ou Fichiers."],["4","Tape ton code habituel : tout est revenu."]].map(r=>r.map(T)),columnStyles:{0:{cellWidth:10,fontStyle:"bold",textColor:PDFC.green}}});
+  const n=doc.getNumberOfPages(); for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); color(PDFC.muted); doc.setFont("helvetica","normal"); doc.text(T("Sociogramme · Sauvegarde du "+quand+" · Confidentiel"),M,290); doc.text(`${i} / ${n}`,W-M,290,{align:"right"}); }
+  const pdf=doc.output("arraybuffer");
+  const blob=new Blob([pdf,"\n"+BK_MARK+b64u(JSON.stringify(data))+"\n%FIN-SOCIOGRAMME\n"],{type:"application/pdf"});
+  return {blob,name:"Sauvegarde Sociogramme "+now.toISOString().slice(0,10)+".pdf"};
 }
-$("#bkSave").onclick=()=>{ shareBackup(false).then(r=>{
-  $("#bkMsg").textContent=r==="ok"?"Sauvegarde enregistrée. Range-la dans OneDrive pour la retrouver si besoin.":r==="cancel"?"Sauvegarde annulée.":"La sauvegarde n'a pas pu être créée sur cet appareil.";
-  if(r==="ok") renderRef(); }); };
-$("#bkFile").addEventListener("change",e=>{
-  const f=e.target.files[0]; e.target.value=""; if(!f) return;
-  const rd=new FileReader(); rd.onload=()=>{
-    try{ const d=JSON.parse(rd.result); if(d.app!=="sociogramme-la-vertu") throw 0;
-      BK_KEYS.forEach(k=>{ if(d[k]!==undefined) put(k,d[k]); });
-      ECOLE=get(K.ec,null); LIVES=get(K.lives,[])||[]; LIVE=null; PUB=null;
-      $("#bkMsg").textContent="Sauvegarde restaurée. Retape ton code si on te le demande."; renderRef();
-    }catch(err){ $("#bkMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }
-  }; rd.readAsText(f);
-});
+/* bouton en deux temps : préparer le PDF, puis l'enregistrer (l'iPad exige un toucher pour enregistrer) */
+function backupFlow(btn,msgEl,onDone){
+  if(!btn) return;
+  btn.onclick=async()=>{
+    if(btn.dataset.ready==="1"&&BKBLOB){ const r=await shareFile(BKBLOB,BKNAME,"Sauvegarde Sociogramme");
+      if(r==="ok"){ put(K.bk,Date.now()); BKBLOB=null; btn.dataset.ready=""; if(msgEl) msgEl.textContent="Sauvegarde enregistrée."; onDone&&onDone(); }
+      else if(r!=="cancel"&&msgEl) msgEl.textContent="La sauvegarde n'a pas pu être enregistrée sur cet appareil.";
+      return; }
+    const old=btn.textContent; btn.disabled=true; btn.textContent="Préparation…";
+    try{ const r=await prepareBackup(); BKBLOB=r.blob; BKNAME=r.name; btn.dataset.ready="1"; btn.textContent="Enregistrer la sauvegarde (PDF)";
+      if(msgEl) msgEl.textContent="Sauvegarde prête. Touche « Enregistrer » et choisis OneDrive."; }
+    catch(e){ btn.textContent=old; if(msgEl) msgEl.textContent="La sauvegarde n'a pas pu être préparée. Vérifie que l'iPad est connecté à internet, puis réessaie."; }
+    btn.disabled=false; };
+}
+/* lit une sauvegarde : PDF (nouveau) ou .json (ancien) */
+function readBackup(f){ return new Promise((ok,ko)=>{ const rd=new FileReader();
+  rd.onload=()=>{ try{ const txt=new TextDecoder("latin1").decode(new Uint8Array(rd.result)); let d;
+      const i=txt.lastIndexOf(BK_MARK);
+      if(i>=0){ const j=txt.indexOf("\n",i); d=JSON.parse(unb64u(txt.slice(i+BK_MARK.length,j<0?undefined:j).trim())); }
+      else d=JSON.parse(dec.decode(new Uint8Array(rd.result)));
+      if(d.app!=="sociogramme-la-vertu") throw 0; ok(d); }catch(e){ ko(e); } };
+  rd.onerror=ko; rd.readAsArrayBuffer(f); }); }
+function applyBackup(d){
+  BK_KEYS.forEach(k=>{ if(d[k]!==undefined) put(k,d[k]); });
+  ECOLE=get(K.ec,null); LIVES=get(K.lives,[])||[]; LIVE=null; PUB=null; PRIV=null; PRIV_RAW=null; put(K.bk,Date.now());
+}
+$("#bkFile").addEventListener("change",e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  readBackup(f).then(d=>{ applyBackup(d); openLock(); $("#lockErr").textContent=""; $("#lockText").textContent="Sauvegarde restaurée. Tape ton code habituel."; })
+    .catch(()=>{ $("#bkMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }); });
+$("#lockFile").addEventListener("change",e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  readBackup(f).then(d=>{ applyBackup(d); openLock(); $("#lockText").textContent="Sauvegarde restaurée. Tape ton code habituel."; })
+    .catch(()=>{ $("#lockRestoreMsg").textContent="Ce fichier n'est pas une sauvegarde du Sociogramme."; }); });
 /* mise à jour automatique : à l'ouverture (et au retour sur l'accueil), on regarde si une nouvelle version est en ligne */
-const APP_VERSION="2026-10-15h";
+const APP_VERSION="2026-10-15i";
 async function checkUpdate(){
   try{
     if(location.protocol!=="https:") return;
